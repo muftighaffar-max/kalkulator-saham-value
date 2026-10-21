@@ -1,0 +1,2496 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Valuasi Saham IHSG & Intelijen Investasi Syariah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="idx_data.js"></script>
+  <script src="ojk_des_list.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- HEADER -->
+    <header class="text-center space-y-2">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Lokasi: D:\gemini\kalkulator-saham &bull; 963 SAHAM BEI &bull; SCREENING SYARIAH 100% SESUAI SK DES OJK (KEP-21/D.04/2026)
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Kalkulator Valuasi & Keputusan Investasi Saham</h1>
+      <p class="text-sm text-slate-400 max-w-3xl mx-auto">
+        Valuasi berbasis arus kas riil (*Free Cash Flow*), analisis siklikalitas industri, radar Early Warning System kepatuhan syariah OJK, dan panduan taktis 3 skenario (Bear, Normal, Bull).
+      </p>
+    </header>
+
+    <!-- SEARCH & AUTOCOMPLETE BAR -->
+    <div class="max-w-3xl mx-auto relative">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <input 
+          id="tickerSearch" 
+          type="text" 
+          autocomplete="off"
+          placeholder="Ketik kode saham apa saja... (Contoh: BRIS, SMRA, MBMA, ICBP, INDF, SIDO, PTBA, BBCA, ADRO, ANTM, MAPI)" 
+          oninput="onSearchInput(this.value)"
+          onkeydown="onSearchKeyDown(event)"
+          class="w-full bg-slate-900/90 border-2 border-indigo-500/50 rounded-2xl pl-13 pr-32 py-4 text-lg font-mono uppercase text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition shadow-2xl"
+          style="padding-left: 3.25rem;"
+        >
+        <button 
+          onclick="searchStockNow()" 
+          class="absolute right-2.5 top-2.5 bottom-2.5 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30">
+          <span>Analisis</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </div>
+
+      <!-- Autocomplete Dropdown List -->
+      <div id="autocompleteList" class="hidden absolute z-50 left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Quick Category Filter Pills (Modern & Clean) -->
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-4">
+        <span class="text-xs text-slate-500 font-semibold tracking-wide uppercase">Pilihan Cepat:</span>
+        <button onclick="selectStock('BRIS')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">BRIS</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 1.320</span>
+        </button>
+        <button onclick="selectStock('ICBP')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">ICBP</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 7.025</span>
+        </button>
+        <button onclick="selectStock('SIDO')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">SIDO</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 350</span>
+        </button>
+        <button onclick="selectStock('ANTM')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">ANTM</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 3.100</span>
+        </button>
+        <button onclick="selectStock('PTBA')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">PTBA</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 3.260</span>
+        </button>
+        <button onclick="selectStock('SMRA')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">SMRA</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 256</span>
+        </button>
+        <button onclick="selectStock('BUAH')" class="px-3 py-1 text-xs rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold">BUAH</span>
+          <span class="text-emerald-400 font-mono text-[11px]">Rp 486</span>
+        </button>
+        <button onclick="selectStock('PANI')" class="px-3 py-1 text-xs rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/40 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+          <span class="font-bold">PANI</span>
+          <span class="text-rose-400 font-mono text-[11px]">Rp 4.760</span>
+          <span class="text-[9px] px-1 py-0.2 rounded bg-rose-950/90 text-rose-300 border border-rose-800/50 font-semibold">Non-DES</span>
+        </button>
+        <button onclick="selectStock('BBCA')" class="px-3 py-1 text-xs rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/40 transition font-medium flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+          <span class="font-bold">BBCA</span>
+          <span class="text-rose-400 font-mono text-[11px]">Rp 5.950</span>
+          <span class="text-[9px] px-1 py-0.2 rounded bg-rose-950/90 text-rose-300 border border-rose-800/50 font-semibold">Non-DES</span>
+        </button>
+      </div>
+    </div>
+    <div class="bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 rounded-2xl p-6 border border-indigo-500/40 shadow-2xl space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-indigo-400 font-bold flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Keputusan Taktis & Panduan Aksi Investor
+          </span>
+          <div class="flex items-center gap-3 mt-1.5">
+            <span id="cardTickerHeader" class="text-3xl font-extrabold font-mono text-white">BRIS</span>
+            <span id="recommendationActionBadge" class="px-3.5 py-1 text-sm font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              CICIL BELI 3 TAHAP (DCA)
+            </span>
+          </div>
+          <div id="cardCompanyNameHeader" class="text-xs text-indigo-300 font-medium mt-0.5">PT Bank Syariah Indonesia Tbk</div>
+          <p id="recommendationSubtext" class="text-xs text-slate-300 mt-1">
+            Saham diperdagangkan di bawah nilai wajar normalnya. Sangat ideal untuk strategi akumulasi bertahap.
+          </p>
+          <button onclick="openManualForm()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/40 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            Isi / Koreksi Data Fundamental
+          </button>
+        </div>
+
+        <div class="text-left md:text-right">
+          <span class="text-xs text-slate-400 block">Harga Penutupan Resmi BEI</span>
+          <div class="flex items-center md:justify-end gap-2">
+            <span id="headerCurrentPrice" class="text-2xl sm:text-3xl font-extrabold font-mono text-white">Rp 1.325</span>
+            <span id="headerDiffBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">+0.0%</span>
+          </div>
+          <span id="headerConsensusFair" class="text-xs text-emerald-400 font-mono font-semibold block mt-0.5">
+            Konsensus Wajar: Rp 2.073 (MoS +36.1%)
+          </span>
+        </div>
+      </div>
+
+      <!-- PERINGATAN KUALITAS DATA -->
+      <div id="dataQualityBanner" class="hidden p-3.5 rounded-xl text-xs leading-relaxed"></div>
+
+      <!-- 3 SKENARIO PROSPEK HARGA KE DEPAN -->
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          Prospek Harga 3 Skenario Masa Depan (Bear, Normal, Bull)
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- BEAR CASE -->
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-2 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block mr-1"></span> Skenario Bear (Pesimis)
+              </span>
+              <span id="bearReturnPct" class="text-xs font-mono font-bold text-rose-300">+15.7%</span>
+            </div>
+            <div class="text-2xl font-extrabold font-mono text-white" id="bearPriceTarget">
+              Rp 1.533
+            </div>
+            <p id="bearDescription" class="text-[11px] text-slate-400 leading-relaxed">
+              Jika terjadi pelemahan ekonomi atau kompresi kelipatan valuasi terendah historis.
+            </p>
+            <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-300">
+              <b>Tindakan:</b> <span id="bearActionText">Titik jaring beli porsi terbesar jika harga turun ke level ini.</span>
+            </div>
+          </div>
+
+          <!-- NORMAL CASE -->
+          <div class="p-4 rounded-xl bg-slate-950/90 border border-emerald-500/40 space-y-2 relative overflow-hidden ring-1 ring-emerald-500/20">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1"></span> Skenario Normal (Konsensus)
+              </span>
+              <span id="baseReturnPct" class="text-xs font-mono font-bold text-emerald-300">+56.5%</span>
+            </div>
+            <div class="text-2xl font-extrabold font-mono text-emerald-400" id="basePriceTarget">
+              Rp 2.073
+            </div>
+            <p id="baseDescription" class="text-[11px] text-slate-400 leading-relaxed">
+              Target nilai intrinsik wajar berdasarkan pertumbuhan laba stabil dan arus kas realistis.
+            </p>
+            <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-300">
+              <b>Tindakan:</b> <span id="baseActionText">Target ambil untung (take profit) awal atau pertahankan investasi.</span>
+            </div>
+          </div>
+
+          <!-- BULL CASE -->
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-indigo-500/30 space-y-2 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 inline-block mr-1"></span> Skenario Bull (Optimis)
+              </span>
+              <span id="bullReturnPct" class="text-xs font-mono font-bold text-indigo-300">+95.6%</span>
+            </div>
+            <div class="text-2xl font-extrabold font-mono text-white" id="bullPriceTarget">
+              Rp 2.591
+            </div>
+            <p id="bullDescription" class="text-[11px] text-slate-400 leading-relaxed">
+              Jika ekspansi bisnis sukses, siklus industri naik, dan pasar memberi premium valuasi.
+            </p>
+            <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-300">
+              <b>Tindakan:</b> <span id="bullActionText">Area target keuntungan maksimal / realisasi profit penuh.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ENTRY PLAN -->
+      <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="space-y-0.5">
+          <span class="font-bold text-indigo-300 uppercase tracking-wider block">Rencana Eksekusi Masuk (Entry Plan Rekomendasi):</span>
+          <span id="entryPlanText" class="text-slate-300">
+            Beli Tahap 1 (30% alokasi) di harga sekarang Rp 1.325 &bull; Pasang jaring Tahap 2 (30%) di Rp 1.250 &bull; Tahap 3 (40%) di Rp 1.150 jika koreksi.
+          </span>
+        </div>
+        <div class="whitespace-nowrap">
+          <span class="text-[10px] text-slate-400 block sm:text-right">Toleransi Risiko Portofolio</span>
+          <span id="riskProfileTag" class="font-semibold text-emerald-400 font-mono">Konservatif - Moderat</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN DASHBOARD (2 KOLOM) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+      
+      <!-- KOLOM KIRI (6 cols): Cash Flow, Siklus & Early Warning Syariah -->
+      <div class="lg:col-span-6 space-y-6">
+
+        <!-- KUALITAS LABA & CASH FLOW -->
+        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              Kualitas Laba & Arus Kas Riil (Cash Flow Reality)
+            </h3>
+            <span id="cashQualityBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              KAS RIIL TINGGI
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Membandingkan <b>Laba Akuntansi (EPS)</b> dengan <b>Arus Kas Operasional (CFO)</b> untuk memastikan laba bukan sekadar angka di atas kertas.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Laba Bersih / Saham (EPS TTM)</span>
+              <span id="cfStatEPS" class="text-base font-bold font-mono text-white">Rp 173,0</span>
+              <span class="text-[10px] text-slate-500 block">Laba akuntansi resmi</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Kas Operasi / Saham (CFO/Share)</span>
+              <span id="cfStatCFO" class="text-base font-bold font-mono text-emerald-400">Rp 101,8</span>
+              <span class="text-[10px] text-slate-500 block">Uang kas masuk riil</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Rasio Kas Operasi vs Laba</span>
+              <span id="cfStatRatio" class="text-base font-bold font-mono text-indigo-300">0.85x</span>
+              <span class="text-[10px] text-slate-500 block">Sehat jika &gt; 0.8x</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Free Cash Flow (FCF)</span>
+              <span id="cfStatFCF" class="text-base font-bold font-mono text-emerald-300">Positif (Kuat)</span>
+              <span class="text-[10px] text-slate-500 block">Sisa kas untuk dividen</span>
+            </div>
+          </div>
+
+          <div id="cashFlowNoteBox" class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+            Arus kas operasional berjalan sehat dan mendukung pembagian dividen tunai tanpa perlu berutang baru.
+          </div>
+        </div>
+
+        <!-- ANALISIS SIKLIKALITAS -->
+        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              Analisis Siklikalitas Industri (Cyclicality Meter)
+            </h3>
+            <span id="cyclicalityBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+              DEFENSIF / TAHAN RESESI
+            </span>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center text-slate-300">
+              <span>Sensitivitas Siklus Ekonomi:</span>
+              <span id="cyclicalityType" class="font-bold text-white">Consumer Non-Cyclical / Finansial</span>
+            </div>
+            
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div id="cyclicalityBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 25%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>Defensif (Pangan/Obat)</span>
+              <span>Moderat</span>
+              <span>Sangat Siklikal (Tambang/Properti)</span>
+            </div>
+
+            <div id="cyclicalityAdviceBox" class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-300 leading-relaxed mt-2">
+              <b>Kaidah Investor:</b> Saham bertipe defensif memiliki laba yang stabil walau ekonomi lesu. Aman disimpan jangka panjang.
+            </div>
+          </div>
+        </div>
+
+        <!-- RADAR EARLY WARNING SYSTEM SYARIAH -->
+        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              Radar Early Warning System (EWS) Syariah OJK
+            </h3>
+            <span id="shariaRiskBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              ZONA AMAN (&lt; 25%)
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-slate-400">Rasio Utang Berbunga / Total Aset:</span>
+                <span id="ewsDebtRatioVal" class="font-mono font-bold text-emerald-400">0.0% (Batas Maks. 45%)</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                <div id="ewsDebtBar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                <span class="text-emerald-400">Aman (&lt;30%)</span>
+                <span class="text-amber-400">Waspada (30-38%)</span>
+                <span class="text-rose-400">Early Warning (38-45%)</span>
+                <span class="text-red-600 font-bold">Non-Syariah (&gt;45%)</span>
+              </div>
+            </div>
+
+            <div id="ewsAlertBox" class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 leading-relaxed">
+              <span class="text-emerald-400 font-bold mr-1">&#10003;</span> <b>Risiko Terdepak dari DES Sangat Rendah:</b> Struktur utang berbunga aman di bawah ambang batas OJK.
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+              <span class="font-semibold text-slate-300 block">Pembersihan Dividen (Dividend Cleansing):</span>
+              <p id="dividendCleansingText" class="text-slate-400 text-[11px] leading-relaxed">
+                Pendapatan non-halal emiten ini 0.0%. Tidak ada potongan pembersihan dividen, 100% dividen halal dikonsumsi.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- KOLOM KANAN (6 cols): Rincian Valuasi & Konsensus -->
+      <div class="lg:col-span-6 space-y-6">
+
+        <!-- DATA FINANSIAL KUNCI -->
+        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              Data Finansial Resmi & Rasio Pasar
+            </span>
+            <span id="stockSectorBadge" class="text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+              Perbankan Syariah
+            </span>
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Laba Bersih / Saham (EPS TTM)</span>
+              <span id="statEPS" class="text-base font-bold font-mono text-white">Rp 173,0</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Nilai Buku / Saham (BVPS)</span>
+              <span id="statBVPS" class="text-base font-bold font-mono text-white">Rp 1.106,5</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Dividen Terakhir (DPS)</span>
+              <span id="statDPS" class="text-base font-bold font-mono text-emerald-400">Rp 32,8 (2,5%)</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">Pertumbuhan Laba Riil (g)</span>
+              <span id="statGrowth" class="text-base font-bold font-mono text-indigo-300">5.0% / thn</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">P/E Ratio Terkini</span>
+              <span id="statPE" class="text-base font-bold font-mono text-white">7.7x</span>
+            </div>
+            <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+              <span class="text-slate-400 block mb-0.5">PBV Ratio Terkini</span>
+              <span id="statPBV" class="text-base font-bold font-mono text-white">1.20x</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABEL METODE VALUASI LENGKAP -->
+        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+              Rincian Perhitungan Multi-Metode
+            </h3>
+            <span class="text-[11px] text-slate-500">Pilih metode aktif</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th class="py-2.5 px-2">Pakai</th>
+                  <th class="py-2.5 px-2">Metode Valuasi</th>
+                  <th class="py-2.5 px-3 text-right">Nilai Wajar</th>
+                  <th class="py-2.5 px-3 text-right">MoS</th>
+                  <th class="py-2.5 px-2 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="methodsTableBody" class="divide-y divide-slate-800/80 font-mono text-xs">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SINTESIS KEPUTUSAN -->
+        <div class="bg-slate-900/80 rounded-2xl p-5 border border-slate-800 space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Sintesis Keputusan untuk Bapak:
+          </h4>
+          <p id="synthesisText" class="text-xs text-slate-300 leading-relaxed">
+            Menganalisis perpaduan arus kas, siklus, dan valuasi...
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-slate-600 pt-6 border-t border-slate-900">
+      Kalkulator Valuasi Saham Syariah & Fundamental IHSG &bull; Lokasi Penyimpanan: D:\gemini\kalkulator-saham
+    </footer>
+
+  </div>
+
+  <!-- MODAL INPUT DATA FUNDAMENTAL MANUAL -->
+  <div id="manualModal" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm overflow-y-auto py-8 px-4">
+    <div class="max-w-2xl mx-auto bg-slate-900 border border-indigo-500/40 rounded-2xl shadow-2xl p-6 space-y-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">Data Fundamental <span id="mfTicker" class="font-mono text-indigo-300">-</span></h2>
+          <p class="text-xs text-slate-400 mt-0.5">Isi dari laporan keuangan terbaru emiten (idx.co.id / situs emiten). Semua angka <b>per lembar saham dalam Rupiah</b>, kecuali yang bertanda %. Kosongkan field yang tidak diketahui; data disimpan di browser ini saja.</p>
+        </div>
+        <button onclick="closeManualForm()" class="text-slate-400 hover:text-white text-2xl leading-none" aria-label="Tutup">&times;</button>
+      </div>
+
+      <!-- Kalkulator bantu: total -> per saham -->
+      <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-2">
+        <span class="font-semibold text-slate-300 block">Kalkulator bantu (angka laporan keuangan &rarr; per saham)</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+          <label class="block"><span class="text-slate-400">Total (Rp miliar)</span>
+            <input id="helperTotal" type="number" step="any" oninput="updateHelper()" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+          <label class="block"><span class="text-slate-400">Saham beredar (juta lembar)</span>
+            <input id="helperShares" type="number" step="any" oninput="updateHelper()" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+          <div class="text-slate-400">= <span id="helperResult" class="font-mono font-bold text-indigo-300">-</span> per saham</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <label class="block"><span class="text-slate-300 font-semibold">EPS / Laba bersih per saham (TTM) *</span>
+          <input id="mf_eps" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">BVPS / Nilai buku (ekuitas) per saham</span>
+          <input id="mf_bvps" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">DPS / Dividen per saham (setahun)</span>
+          <input id="mf_dps" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Kas operasi (CFO) per saham</span>
+          <input id="mf_cfoPerShare" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Belanja modal (Capex) per saham</span>
+          <input id="mf_capexPerShare" type="number" step="any" placeholder="angka positif" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Pertumbuhan laba realistis (% / thn)</span>
+          <input id="mf_growth" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Utang berbunga / Total aset (%)</span>
+          <input id="mf_debtRatio" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Pendapatan non-halal / Total pendapatan (%)</span>
+          <input id="mf_nonHalalRatio" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">P/E target historis (x)</span>
+          <input id="mf_targetPE" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">PBV target historis (x)</span>
+          <input id="mf_targetPBV" type="number" step="any" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-white focus:outline-none focus:border-indigo-400"></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Sifat siklus bisnis</span>
+          <select id="mf_cyclicalityScore" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-400">
+            <option value="">(biarkan seperti sekarang)</option>
+            <option value="20">Defensif (pangan, obat, kebutuhan pokok)</option>
+            <option value="50">Moderat</option>
+            <option value="80">Siklikal (tambang, komoditas, properti)</option>
+          </select></label>
+        <label class="block"><span class="text-slate-300 font-semibold">Sumber &amp; periode data</span>
+          <input id="mf_source" type="text" maxlength="120" placeholder="mis. LK Q2 2026 (TTM)" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400"></label>
+      </div>
+
+      <p id="mfError" class="hidden text-xs text-rose-300"></p>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <button id="mfResetBtn" onclick="resetManualData()" class="px-3 py-2 text-xs font-semibold rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-200 border border-rose-800/50 transition">Hapus data manual saham ini</button>
+        <div class="flex gap-2">
+          <button onclick="closeManualForm()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">Batal</button>
+          <button onclick="saveManualForm()" class="px-4 py-2 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">Simpan &amp; Hitung Ulang</button>
+        </div>
+      </div>
+
+      <!-- Daftar & cadangan data manual -->
+      <div class="pt-4 border-t border-slate-800 text-xs space-y-2">
+        <span class="font-semibold text-slate-300 block">Data manual tersimpan di browser ini</span>
+        <div id="mfSavedList" class="flex flex-wrap gap-1.5 text-slate-500">-</div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button onclick="exportManualData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">Ekspor cadangan (.json)</button>
+          <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer">Impor cadangan (.json)
+            <input type="file" accept=".json,application/json" onchange="importManualData(this)" class="hidden"></label>
+        </div>
+        <p class="text-[10px] text-slate-500">Data tersimpan di penyimpanan browser. Membersihkan data browser akan menghapusnya, jadi ekspor cadangan secara berkala.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+        // ==============================================================
+    // MASTER SELURUH 955 EMITEN RESMI BURSA EFEK INDONESIA (IHSG)
+    // ==============================================================
+    const masterAllStocks = {
+    "VKTR":  "VKTR TEKNOLOGI MOBILITAS Tbk",
+    "DSSA":  "DIAN SWASTATIKA SENTOSA Tbk",
+    "SKBM":  "SEKAR BUMI Tbk",
+    "MORA":  "MORA TELEMATIKA INDONESIA Tbk",
+    "BMHS":  "BUNDAMEDIK Tbk",
+    "CBRE":  "CAKRA BUANA RESOURCES ENERGI Tbk",
+    "SAGE":  "SAPTAUSAHA GEMILANGINDAH Tbk",
+    "IKAN":  "ERA MANDIRI CEMERLANG Tbk",
+    "ANJT":  "AUSTINDO NUSANTARA JAYA Tbk",
+    "AADI":  "ADARO ANDALAN INDONESIA Tbk",
+    "SOHO":  "SOHO GLOBAL HEALTH Tbk",
+    "MARI":  "MAHAKA RADIO INTEGRA Tbk",
+    "KIAS":  "KERAMIKA INDONESIA ASSOSIASI Tbk",
+    "GTBO":  "GARDA TUJUH BUANA Tbk",
+    "GLOB":  "GLOBE KITA TERANG Tbk",
+    "MYTX":  "ASIA PACIFIC INVESTAMA Tbk",
+    "NTBK":  "NUSATAMA BERKAH Tbk",
+    "TRIN":  "PERINTIS TRINITI PROPERTI Tbk",
+    "JTPE":  "JASUINDO TIGA PERKASA Tbk",
+    "PURE":  "TRINITAN METALS AND MINERALS Tbk",
+    "PGEO":  "PERTAMINA GEOTHERMAL ENERGY Tbk",
+    "BAPA":  "BEKASI ASRI PEMULA Tbk",
+    "HDIT":  "HENSEL DAVEST INDONESIA Tbk",
+    "BBNI":  "BANK NEGARA INDONESIA Tbk",
+    "HEXA":  "HEXINDO ADIPERKASA Tbk",
+    "PADI":  "MINNA PADI INVESTAMA SEKURITAS Tbk",
+    "HAJJ":  "ARSY BUANA TRAVELINDO Tbk",
+    "BUVA":  "BUKIT ULUWATU VILLA Tbk",
+    "WEGE":  "WIJAYA KARYA BANGUNAN GEDUNG Tbk",
+    "ABMM":  "ABM INVESTAMA Tbk",
+    "GJTL":  "GAJAH TUNGGAL Tbk",
+    "TRST":  "TRIAS SENTOSA Tbk",
+    "SUPA":  "SUPER BANK INDONESIA Tbk",
+    "DOID":  "BUMA INTERNASIONAL GRUP Tbk",
+    "IRRA":  "ITAMA RANORAYA Tbk",
+    "CHEK":  "DIASTIKA BIOTEKINDO Tbk",
+    "TOOL":  "ROHARTINDO NUSANTARA LUAS Tbk",
+    "INAI":  "INDAL ALUMINIUM INDUSTRY Tbk",
+    "RDTX":  "RODA VIVATEX Tbk",
+    "GULA":  "AMAN AGRINDO Tbk",
+    "YPAS":  "YANAPRIMA HASTAPERSADA Tbk",
+    "TRAM":  "TRADA ALAM MINERA Tbk",
+    "HOPE":  "HARAPAN DUTA PERTIWI Tbk",
+    "MHKI":  "MULTI HANNA KREASINDO Tbk",
+    "INKP":  "INDAH KIAT PULP AND PAPER Tbk",
+    "TUGU":  "ASURANSI TUGU PRATAMA INDONESIA Tbk",
+    "SOLA":  "XOLARE RCR ENERGY Tbk",
+    "CTBN":  "CITRA TUBINDO Tbk",
+    "CBDK":  "BANGUN KOSAMBI SUKSES Tbk",
+    "GGRM":  "GUDANG GARAM Tbk",
+    "CARS":  "INDUSTRI DAN PERDAGANGAN BINTRACO DHARM",
+    "PPGL":  "PRIMA GLOBALINDO LOGISTIK Tbk",
+    "INPC":  "BANK ARTHA GRAHA INTERNASIONAL Tbk",
+    "PKPK":  "PARAGON KARYA PERKASA Tbk",
+    "ASHA":  "CILACAP SAMUDERA FISHING INDUSTRY Tbk",
+    "PNLF":  "PANIN FINANCIAL Tbk",
+    "GOLL":  "GOLDEN PLANTATION Tbk",
+    "SMLE":  "SINERGI MULTI LESTARINDO Tbk",
+    "AYAM":  "JANU PUTRA SEJAHTERA Tbk",
+    "WIKA":  "WIJAYA KARYA (PERSERO) Tbk",
+    "PEVE":  "PENTA VALENT Tbk",
+    "BBLD":  "BUANA FINANCE Tbk",
+    "MBTO":  "MARTINA BERTO Tbk",
+    "ICBP":  "INDOFOOD CBP SUKSES MAKMUR Tbk",
+    "SURE":  "SUPER ENERGY Tbk",
+    "BGTG":  "BANK GANESHA Tbk",
+    "BTEK":  "BUMI TEKNOKULTURA UNGGUL Tbk",
+    "IBOS":  "INDO BOGA SUKSES Tbk",
+    "KAEF":  "KIMIA FARMA Tbk",
+    "GRIA":  "INGRIA PRATAMA CAPITALINDO Tbk",
+    "ESIP":  "SINERGI INTI PLASTINDO Tbk",
+    "JAYA":  "ARMADA BERJAYA TRANS Tbk",
+    "UNTR":  "UNITED TRACTORS Tbk",
+    "KARW":  "MERATUS JASA PRIMA Tbk",
+    "VICO":  "VICTORIA INVESTAMA Tbk",
+    "BUDI":  "BUDI STARCH \u0026 SWEETENER Tbk",
+    "KMDS":  "KURNIAMITRA DUTA SENTOSA Tbk",
+    "TAXI":  "EXPRESS TRANSINDO UTAMA Tbk",
+    "PGJO":  "BAHTERA BUMI RAYA Tbk",
+    "ASPI":  "ANDALAN SAKTI PRIMAINDO Tbk",
+    "RALS":  "RAMAYANA LESTARI SENTOSA Tbk",
+    "OMED":  "JAYAMAS MEDICA INDUSTRI Tbk",
+    "DAYA":  "DUTA INTIDAYA Tbk",
+    "PANS":  "PANIN SEKURITAS Tbk",
+    "POLY":  "ASIA PACIFIC FIBERS Tbk",
+    "SMKM":  "SUMBER MAS KONSTRUKSI Tbk",
+    "LMPI":  "LANGGENG MAKMUR INDUSTRI Tbk",
+    "MUTU":  "MUTUAGUNG LESTARI Tbk",
+    "SKRN":  "SUPERKRANE MITRA UTAMA Tbk",
+    "PSKT":  "RED PLANET INDONESIA Tbk",
+    "FAST":  "FAST FOOD INDONESIA Tbk",
+    "BIPI":  "ASTRINDO NUSANTARA INFRASTRUKTUR Tbk",
+    "ULTJ":  "ULTRAJAYA MILK INDUSTRY AND TRADING COMPA",
+    "SRTG":  "SARATOGA INVESTAMA SEDAYA Tbk",
+    "WTON":  "WIJAYA KARYA BETON Tbk",
+    "MPPA":  "MATAHARI PUTRA PRIMA Tbk",
+    "HDFA":  "RADANA BHASKARA FINANCE Tbk",
+    "SGRO":  "PRIME AGRI RESOURCES Tbk",
+    "COCO":  "WAHANA INTERFOOD NUSANTARA Tbk",
+    "PTPS":  "PULAU SUBUR Tbk",
+    "KAQI":  "JANTRA GRUPO INDONESIA Tbk",
+    "CPRO":  "CENTRAL PROTEINAPRIMA Tbk",
+    "PBID":  "PANCA BUDI IDAMAN Tbk",
+    "MANG":  "MANGGUNG POLAHRAYA Tbk",
+    "BBHI":  "ALLO BANK INDONESIA Tbk",
+    "DSFI":  "DHARMA SAMUDERA FISHING INDUSTRIES Tbk",
+    "BSSR":  "BARAMULTI SUKSESSARANA Tbk",
+    "KDSI":  "KEDAWUNG SETIA INDUSTRIAL Tbk",
+    "TBMS":  "TEMBAGA MULIA SEMANAN Tbk",
+    "INDY":  "INDIKA ENERGY Tbk",
+    "EMTK":  "ELANG MAHKOTA TEKNOLOGI Tbk",
+    "PSAB":  "J RESOURCES ASIA PASIFIK Tbk",
+    "TPMA":  "TRANS POWER MARINE Tbk",
+    "SMMT":  "GOLDEN EAGLE ENERGY Tbk",
+    "JSPT":  "JAKARTA SETIABUDI INTERNASIONAL Tbk",
+    "VAST":  "VASTLAND INDONESIA Tbk",
+    "ZINC":  "KAPUAS PRIMA COAL Tbk",
+    "SGER":  "SUMBER GLOBAL ENERGY Tbk",
+    "PEGE":  "PANCA GLOBAL KAPITAL Tbk",
+    "MSIE":  "MULTISARANA INTAN EDUKA Tbk",
+    "TAYS":  "JAYA SWARASA AGUNG Tbk",
+    "DGNS":  "DIAGNOS LABORATORIUM UTAMA Tbk",
+    "CENT":  "CENTRATAMA TELEKOMUNIKASI INDONESIA Tbk",
+    "IPOL":  "INDOPOLY SWAKARSA INDUSTRY Tbk",
+    "ALKA":  "ALAKASA INDUSTRINDO Tbk",
+    "WMUU":  "WIDODO MAKMUR UNGGAS Tbk",
+    "FORU":  "FORTUNE INDONESIA Tbk",
+    "ARTO":  "BANK JAGO Tbk",
+    "DNET":  "INDORITEL MAKMUR INTERNASIONAL Tbk",
+    "ETWA":  "ETERINDO WAHANATAMA Tbk",
+    "POOL":  "POOL ADVISTA INDONESIA Tbk",
+    "ENVY":  "ENVY TECHNOLOGIES INDONESIA Tbk",
+    "OASA":  "MAHARAKSA BIRU ENERGI Tbk",
+    "PNBS":  "BANK PANIN DUBAI SYARIAH Tbk",
+    "INDR":  "INDO-RAMA SYNTHETICS Tbk",
+    "PLAS":  "POLARIS INVESTAMA TBK",
+    "SRAJ":  "SEJAHTERARAYA ANUGRAHJAYA Tbk, PT",
+    "CPIN":  "CHAROEN POKPHAND INDONESIA Tbk",
+    "BMSR":  "BINTANG MITRA SEMESTARAYA Tbk",
+    "INDS":  "INDOSPRING Tbk",
+    "INOV":  "INOCYCLE TECHNOLOGY GROUP Tbk",
+    "HUMI":  "HUMPUSS MARITIM INTERNASIONAL Tbk",
+    "SFAN":  "SURYA FAJAR CAPITAL Tbk",
+    "SULI":  "SLJ GLOBAL Tbk",
+    "BVIC":  "BANK VICTORIA INTERNATIONAL Tbk",
+    "DKHH":  "CIPTA SARANA MEDIKA Tbk",
+    "PWON":  "PAKUWON JATI Tbk",
+    "KKES":  "KUSUMA KEMINDO SENTOSA Tbk",
+    "AMAR":  "BANK AMAR INDONESIA Tbk",
+    "SMDR":  "SAMUDERA INDONESIA Tbk",
+    "INCI":  "INTANWIJAYA INTERNASIONAL Tbk",
+    "RSCH":  "CHARLIE HOSPITAL SEMARANG Tbk",
+    "NETV":  "MDTV MEDIA TECHNOLOGIES Tbk",
+    "DMND":  "DIAMOND FOOD INDONESIA Tbk",
+    "SMGA":  "SUMBER MINERAL GLOBAL ABADI Tbk",
+    "INTP":  "INDOCEMENT TUNGGAL PRAKARSA Tbk",
+    "CSAP":  "CATUR SENTOSA ADIPRANA Tbk",
+    "OCAP":  "ONIX CAPITAL Tbk",
+    "TIRA":  "TIRA AUSTENITE Tbk",
+    "PTDU":  "DJASA UBERSAKTI Tbk",
+    "ROTI":  "NIPPON INDOSARI CORPINDO Tbk",
+    "KLBF":  "KALBE FARMA Tbk",
+    "PTSN":  "SAT NUSAPERSADA Tbk",
+    "MPRO":  "MAHA PROPERTI INDONESIA Tbk",
+    "CNTX":  "CENTEX Tbk SERI A PREFEREN",
+    "SDMU":  "SIDOMULYO SELARAS Tbk",
+    "SAME":  "SARANA MEDITAMA METROPOLITAN Tbk",
+    "ZATA":  "BERSAMA ZATTA JAYA Tbk",
+    "FLMC":  "FALMACO NONWOVEN INDUSTRI Tbk",
+    "APEX":  "APEXINDO PRATAMA DUTA Tbk",
+    "CMNT":  "CEMINDO GEMILANG Tbk",
+    "SMKL":  "SATYAMITRA KEMAS LESTARI Tbk",
+    "TBIG":  "TOWER BERSAMA INFRASTRUCTURE Tbk",
+    "SMCB":  "SOLUSI BANGUN INDONESIA Tbk",
+    "BULL":  "BUANA LINTAS LAUTAN Tbk",
+    "COAL":  "BLACK DIAMOND RESOURCES Tbk",
+    "BUAH":  "SEGAR KUMALA INDONESIA Tbk",
+    "AMRT":  "SUMBER ALFARIA TRIJAYA Tbk",
+    "KICI":  "KEDAUNG INDAH CAN Tbk",
+    "PPRI":  "PAPEROCKS INDONESIA Tbk",
+    "CASA":  "CAPITAL FINANCIAL INDONESIA Tbk",
+    "UANG":  "PAKUAN Tbk",
+    "IKPM":  "IKAPHARMINDO PUTRAMAS Tbk",
+    "LIFE":  "MSIG LIFE INSURANCE INDONESIA Tbk",
+    "ADMF":  "ADIRA DINAMIKA MULTI FINANCE Tbk",
+    "BRMS":  "BUMI RESOURCES MINERALS Tbk",
+    "IKBI":  "SUMI INDO KABEL Tbk",
+    "MDKI":  "EMDEKI UTAMA Tbk",
+    "SMRU":  "SMR UTAMA Tbk",
+    "ARGO":  "ARGO PANTES Tbk",
+    "SICO":  "SIGMA ENERGY COMPRESSINDO Tbk",
+    "PANR":  "PANORAMA SENTRAWISATA Tbk",
+    "IBST":  "INTI BANGUN SEJAHTERA Tbk",
+    "LMSH":  "LIONMESH PRIMA Tbk",
+    "KIJA":  "KAWASAN INDUSTRI JABABEKA Tbk",
+    "MCOL":  "PRIMA ANDALAN MANDIRI Tbk",
+    "ELSA":  "ELNUSA Tbk",
+    "GPSO":  "GEOPRIMA SOLUSI Tbk",
+    "UCID":  "UNI-CHARM INDONESIA Tbk",
+    "ASJT":  "ASURANSI JASA TANIA Tbk",
+    "GOLD":  "VISI TELEKOMUNIKASI INFRASTRUKTUR Tbk, PT",
+    "CLPI":  "COLORPAK INDONESIA Tbk",
+    "FORE":  "FORE KOPI INDONESIA Tbk",
+    "GIAA":  "GARUDA INDONESIA (PERSERO) Tbk",
+    "NOBU":  "BANK NATIONALNOBU Tbk",
+    "MSJA":  "MULTI SPUNINDO JAYA Tbk",
+    "ERTX":  "ERATEX DJAJA Tbk",
+    "NICE":  "ADHI KARTIKO PRATAMA Tbk",
+    "BIMA":  "PRIMARINDO ASIA INFRASTRUCTURE Tbk",
+    "CASH":  "CASHLEZ WORLDWIDE INDONESIA Tbk",
+    "MTPS":  "META EPSI Tbk",
+    "RICY":  "RICKY PUTRA GLOBALINDO Tbk",
+    "BREN":  "BARITO RENEWABLES ENERGY Tbk",
+    "BDMN":  "BANK DANAMON INDONESIA Tbk",
+    "IDEA":  "IDEA INDONESIA AKADEMI Tbk",
+    "SPMA":  "SUPARMA Tbk",
+    "KDTN":  "PURI SENTUL PERMAI Tbk",
+    "SUPR":  "SOLUSI TUNAS PRATAMA Tbk",
+    "MAPB":  "MAP BOGA ADIPERKASA Tbk",
+    "SBAT":  "SEJAHTERA BINTANG ABADI TEXTILE Tbk",
+    "DIGI":  "ARKADIA DIGITAL MEDIA Tbk",
+    "TRGU":  "CERESTAR INDONESIA Tbk",
+    "DRMA":  "DHARMA POLIMETAL Tbk",
+    "TOTO":  "SURYA TOTO INDONESIA Tbk",
+    "BLOG":  "TRIMITRA TRANS PERSADA Tbk",
+    "KING":  "HOFFMEN CLEANINDO Tbk",
+    "CANI":  "CAPITOL NUSANTARA INDONESIA Tbk",
+    "CSIS":  "CAHAYASAKTI INVESTINDO SUKSES Tbk",
+    "AUTO":  "ASTRA OTOPARTS Tbk",
+    "JPFA":  "JAPFA COMFEED INDONESIA Tbk",
+    "LMAS":  "LIMAS INDONESIA MAKMUR Tbk",
+    "PTIS":  "INDO STRAITS Tbk",
+    "HKMU":  "HK METALS UTAMA Tbk",
+    "TRIL":  "TRIWIRA INSANLESTARI Tbk",
+    "PGAS":  "PERUSAHAAN GAS NEGARA (PERSERO) Tbk",
+    "HBAT":  "MINAHASA MEMBANGUN HEBAT Tbk",
+    "MFMI":  "MULTIFILING MITRA INDONESIA Tbk",
+    "AMIN":  "ATELIERS MECANIQUES D`INDONESIE Tbk",
+    "MLPT":  "MULTIPOLAR TECHNOLOGY Tbk",
+    "GUNA":  "GUNANUSA ERAMANDIRI Tbk",
+    "EPMT":  "ENSEVAL PUTERA MEGATRADING Tbk",
+    "LIVE":  "HOMECO VICTORIA MAKMUR Tbk",
+    "WINS":  "WINTERMAR OFFSHORE MARINE Tbk",
+    "GTSI":  "GTS INTERNASIONAL Tbk",
+    "PALM":  "PROVIDENT INVESTASI BERSAMA Tbk",
+    "HYGN":  "ECOCARE INDO PASIFIK Tbk",
+    "FITT":  "HOTEL FITRA INTERNATIONAL Tbk",
+    "GOTO":  "MVS GOTO GOJEK TOKOPEDIA Tbk",
+    "TINS":  "TIMAH Tbk",
+    "CITY":  "NATURA CITY DEVELOPMENTS Tbk",
+    "CNKO":  "EXPLOITASI ENERGI INDONESIA Tbk",
+    "RAAM":  "TRIPAR MULTIVSION PLUS Tbk",
+    "SDRA":  "BANK WOORI SAUDARA INDONESIA 1906 Tbk",
+    "AKRA":  "AKR CORPORINDO Tbk",
+    "CINT":  "CHITOSE INTERNASIONAL Tbk",
+    "FAPA":  "FAP AGRI Tbk",
+    "HADE":  "HIMALAYA ENERGI PERKASA Tbk",
+    "SOSS":  "SHIELD ON SERVICE Tbk",
+    "PRAY":  "FAMON AWAL BROS SEDAYA Tbk",
+    "PNSE":  "PUDJIADI AND SONS Tbk",
+    "TRUS":  "TRUST FINANCE INDONESIA Tbk",
+    "LABA":  "GREEN POWER GROUP Tbk",
+    "SOFA":  "SOLUSI ENVIRONMENT ASIA Tbk",
+    "SEMA":  "SEMACOM INTEGRATED Tbk",
+    "LPPF":  "MATAHARI DEPARTMENT STORE Tbk",
+    "BLTZ":  "GRAHA LAYAR PRIMA Tbk",
+    "CLEO":  "SARIGUNA PRIMATIRTA Tbk",
+    "BIRD":  "BLUE BIRD Tbk",
+    "BNGA":  "BANK CIMB NIAGA Tbk",
+    "MEGA":  "BANK MEGA Tbk",
+    "NAIK":  "ADIWARNA ANUGERAH ABADI Tbk",
+    "BLTA":  "BERLIAN LAJU TANKER Tbk",
+    "BBRI":  "BANK RAKYAT INDONESIA (PERSERO) Tbk",
+    "RATU":  "RAHARJA ENERGI CEPU Tbk",
+    "UVCR":  "TRIMEGAH KARYA PRATAMA Tbk",
+    "AKPI":  "ARGHA KARYA PRIMA INDUSTRY Tbk",
+    "INPP":  "INDONESIAN PARADISE PROPERTY Tbk",
+    "DVLA":  "DARYA - VARIA LABORATORIA Tbk",
+    "NCKL":  "TRIMEGAH BANGUN PERSADA Tbk",
+    "BAYU":  "BAYU BUANA Tbk",
+    "DUTI":  "DUTA PERTIWI Tbk",
+    "BKSL":  "SENTUL CITY Tbk",
+    "LFLO":  "IMAGO MULIA PERSADA Tbk",
+    "ASRI":  "ALAM SUTERA REALTY Tbk",
+    "BFIN":  "BFI FINANCE INDONESIA Tbk",
+    "GOOD":  "GARUDAFOOD PUTRA PUTRI JAYA Tbk",
+    "KBLV":  "FIRST MEDIA Tbk",
+    "ADRO":  "ALAMTRI RESOURCES INDONESIA Tbk",
+    "FASW":  "FAJAR SURYA WISESA Tbk",
+    "RELI":  "RELIANCE SEKURITAS INDONESIA Tbk",
+    "ASLC":  "AUTOPEDIA SUKSES LESTARI Tbk",
+    "SMGR":  "SEMEN INDONESIA (PERSERO) Tbk",
+    "APLI":  "ASIAPLAST INDUSTRIES Tbk",
+    "TOSK":  "TOPINDO SOLUSI KOMUNIKA Tbk",
+    "ANTM":  "ANEKA TAMBANG Tbk",
+    "ITIC":  "INDONESIAN TOBACCO Tbk",
+    "AMFG":  "ASAHIMAS FLAT GLASS Tbk",
+    "REAL":  "REPOWER ASIA INDONESIA Tbk",
+    "NPGF":  "NUSA PALAPA GEMILANG Tbk",
+    "TLDN":  "TELADAN PRIMA AGRO Tbk",
+    "BABY":  "MULTITREND INDO Tbk",
+    "PAMG":  "BIMA SAKTI PERTIWI Tbk",
+    "AKSI":  "MINERAL SUMBERDAYA MANDIRI Tbk",
+    "KOIN":  "KOKOH INTI AREBAMA Tbk",
+    "RGAS":  "KIAN SANTANG MULIATAMA Tbk",
+    "UNIQ":  "ULIMA NITRA Tbk",
+    "PPRE":  "PP PRESISI Tbk",
+    "NICL":  "PAM MINERAL Tbk",
+    "GDST":  "GUNAWAN DIANJAYA STEEL Tbk",
+    "BIPP":  "BHUWANATALA INDAH PERMAI Tbk",
+    "FISH":  "FKS MULTI AGRO Tbk",
+    "MAYA":  "BANK MAYAPADA INTERNASIONAL Tbk",
+    "MMLP":  "MEGA MANUNGGAL PROPERTY Tbk",
+    "LTLS":  "LAUTAN LUAS Tbk",
+    "HAIS":  "HASNUR INTERNASIONAL SHIPPING Tbk",
+    "URBN":  "URBAN JAKARTA PROPERTINDO Tbk",
+    "CMNP":  "CITRA MARGA NUSAPHALA PERSADA Tbk",
+    "BKSW":  "BANK QNB INDONESIA Tbk",
+    "CMRY":  "CISARUA MOUNTAIN DAIRY Tbk",
+    "BELI":  "GLOBAL DIGITAL NIAGA Tbk",
+    "TAMA":  "LANCARTAMA SEJATI Tbk",
+    "TMPO":  "TEMPO INTI MEDIA Tbk",
+    "BBSS":  "BUMI BENOWO SUKSES SEJAHTERA Tbk",
+    "HOKI":  "BUYUNG POETRA SEMBADA Tbk",
+    "CTTH":  "CITATAH Tbk",
+    "TRIM":  "TRIMEGAH SEKURITAS INDONESIA Tbk",
+    "AMMS":  "AGUNG MENJANGAN MAS Tbk",
+    "ARKA":  "ARKHA JAYANTI PERSADA Tbk",
+    "JAWA":  "JAYA AGRA WATTIE Tbk",
+    "NIRO":  "CITY RETAIL DEVELOPMENTS Tbk",
+    "BESS":  "BATULICIN NUSANTARA MARITIM Tbk",
+    "ARTI":  "RATU PRABU ENERGI Tbk",
+    "MCAS":  "M CASH INTEGRASI Tbk",
+    "DILD":  "INTILAND DEVELOPMENT Tbk",
+    "TAMU":  "PELAYARAN TAMARIN SAMUDRA Tbk",
+    "TGKA":  "TIGARAKSA SATRIA Tbk",
+    "CAMP":  "CAMPINA ICE CREAM INDUSTRY Tbk",
+    "BBYB":  "BANK NEO COMMERCE Tbk",
+    "JKON":  "JAYA KONSTRUKSI MANGGALA PRATAMA Tbk",
+    "MRAT":  "MUSTIKA RATU Tbk",
+    "KBRI":  "KERTAS BASUKI RACHMAT INDONESIA Tbk",
+    "NZIA":  "NUSANTARA ALMAZIA Tbk",
+    "MTEL":  "DAYAMITRA TELEKOMUNIKASI Tbk",
+    "BINA":  "BANK INA PERDANA Tbk",
+    "PNGO":  "PINAGO UTAMA Tbk",
+    "NATO":  "SURYA PERMATA ANDALAN Tbk",
+    "CLAY":  "CITRA PUTRA REALTY Tbk",
+    "WEHA":  "WEHA TRANSPORTASI INDONESIA Tbk",
+    "IFSH":  "IFISHDECO Tbk",
+    "MREI":  "MASKAPAI REASURANSI INDONESIA Tbk",
+    "BNBA":  "BANK BUMI ARTA Tbk",
+    "POLL":  "POLLUX PROPERTIES INDONESIA Tbk",
+    "YELO":  "YELOOO INTEGRA DATANET Tbk",
+    "IBFN":  "INTAN BARU PRANA Tbk",
+    "TFCO":  "TIFICO FIBER INDONESIA Tbk",
+    "PRIM":  "ROYAL PRIMA Tbk",
+    "PICO":  "PELANGI INDAH CANINDO Tbk",
+    "TLKM":  "TELKOM INDONESIA (PERSERO) Tbk",
+    "PLIN":  "PLAZA INDONESIA REALTY Tbk",
+    "NFCX":  "NFC INDONESIA Tbk",
+    "LPPS":  "LENOX PASIFIK INVESTAMA Tbk",
+    "IPAC":  "ERA GRAHAREALTY Tbk",
+    "EKAD":  "EKADHARMA INTERNATIONAL Tbk",
+    "RAJA":  "RUKUN RAHARJA Tbk",
+    "MABA":  "MARGA ABHINAYA ABADI Tbk",
+    "FUTR":  "FUTURA ENERGI GLOBAL Tbk",
+    "MAHA":  "MANDIRI HERINDO ADIPERKASA Tbk",
+    "SINI":  "SINGARAJA PUTRA Tbk",
+    "ISAP":  "ISRA PRESISI INDONESIA Tbk",
+    "WIFI":  "SOLUSI SINERGI DIGITAL Tbk",
+    "PART":  "CIPTA PERDANA LANCAR Tbk",
+    "SWAT":  "SRIWAHANA ADITYAKARTA Tbk",
+    "ZONE":  "MEGA PERINTIS Tbk",
+    "SOCI":  "SOECHI LINES Tbk",
+    "TRJA":  "TRANSKON JAYA Tbk",
+    "NELY":  "PELAYARAN NELLY DWI PUTRI Tbk",
+    "WGSH":  "WIRA GLOBAL SOLUSI Tbk",
+    "MTRA":  "MITRA PEMUDA Tbk",
+    "LRNA":  "EKA SARI LORENA TRANSPORT Tbk",
+    "LAPD":  "LEYAND INTERNATIONAL Tbk",
+    "DOOH":  "ERA MEDIA SEJAHTERA Tbk",
+    "MAIN":  "MALINDO FEEDMILL Tbk",
+    "RIGS":  "RIG TENDERS INDONESIA Tbk",
+    "HERO":  "DFI RETAIL NUSANTARA Tbk",
+    "PYFA":  "PYRIDAM FARMA Tbk",
+    "AMAG":  "ASURANSI MULTI ARTHA GUNA Tbk",
+    "HALO":  "HALONI JANE Tbk",
+    "SMSM":  "SELAMAT SEMPURNA Tbk",
+    "ASLI":  "ASRI KARYA LESTARI Tbk",
+    "PSDN":  "PRASIDHA ANEKA NIAGA Tbk",
+    "MPMX":  "MITRA PINASTHIKA MUSTIKA Tbk",
+    "WSKT":  "WASKITA KARYA (PERSERO) Tbk",
+    "NUSA":  "SINERGI MEGAH INTERNUSA Tbk",
+    "ADMR":  "ALAMTRI MINERALS INDONESIA Tbk",
+    "CBUT":  "CITRA BORNEO UTAMA Tbk",
+    "TGRA":  "TERREGRA ASIA ENERGY Tbk",
+    "LION":  "LION METAL WORKS Tbk",
+    "BAJA":  "SARANACENTRAL BAJATAMA Tbk",
+    "BBCA":  "BANK CENTRAL ASIA Tbk",
+    "NSSS":  "NUSANTARA SAWIT SEJAHTERA Tbk",
+    "HGII":  "HERO GLOBAL INVESTMENT Tbk",
+    "WINR":  "WINNER NUSANTARA JAYA Tbk",
+    "KOBX":  "KOBEXINDO TRACTORS Tbk",
+    "PJAA":  "PEMBANGUNAN JAYA ANCOL Tbk",
+    "RISE":  "JAYA SUKSES MAKMUR SENTOSA Tbk",
+    "MINE":  "SINAR TERANG MANDIRI Tbk",
+    "OLIV":  "OSCAR MITRA SUKSES SEJAHTERA Tbk",
+    "MDLA":  "MEDELA POTENTIA Tbk",
+    "INDO":  "ROYALINDO INVESTA WIJAYA Tbk",
+    "SKLT":  "SEKAR LAUT Tbk",
+    "VERN":  "VERONA INDAH PICTURES Tbk",
+    "TELE":  "OMNI INOVASI INDONESIA Tbk",
+    "UNTD":  "TERANG DUNIA INTERNUSA Tbk",
+    "BEKS":  "BANK PEMBANGUNAN DAERAH BANTEN Tbk",
+    "CASS":  "CAHAYA AERO SERVICES Tbk",
+    "RBMS":  "RISTIA BINTANG MAHKOTASEJATI Tbk",
+    "SSMS":  "SAWIT SUMBERMAS SARANA Tbk",
+    "RUNS":  "GLOBAL SUKSES SOLUSI Tbk",
+    "INDX":  "TANAH LAUT Tbk",
+    "GRPM":  "GRAHA PRIMA MENTARI Tbk",
+    "SRSN":  "INDO ACIDATAMA Tbk",
+    "DAAZ":  "DAAZ BARA LESTARI Tbk",
+    "MTDL":  "METRODATA ELECTRONICS Tbk",
+    "CSRA":  "CISADANE SAWIT RAYA Tbk",
+    "LINK":  "LINK NET Tbk",
+    "BIKA":  "BINAKARYA JAYA ABADI Tbk",
+    "SILO":  "SILOAM INTERNATIONAL HOSPITALS Tbk",
+    "TCID":  "MANDOM INDONESIA Tbk",
+    "SMAR":  "SINAR MAS AGRO RESOURCES AND TECHNOLOGY T",
+    "AKKU":  "ANUGERAH KAGUM KARYA UTAMA Tbk",
+    "GTRA":  "GRAHAPRIMA SUKSESMANDIRI Tbk",
+    "BBKP":  "BANK KB INDONESIA Tbk",
+    "MBSS":  "MITRABAHTERA SEGARA SEJATI Tbk",
+    "APII":  "ARITA PRIMA INDONESIA Tbk",
+    "SONA":  "SONA TOPAS TOURISM INDUSTRY Tbk",
+    "UNSP":  "BAKRIE SUMATERA PLANTATIONS Tbk",
+    "PNBN":  "BANK PAN INDONESIA Tbk",
+    "SIMA":  "SIWANI MAKMUR Tbk",
+    "TDPM":  "TRIDOMAIN PERFORMANCE MATERIALS Tbk",
+    "MAPA":  "MAP AKTIF ADIPERKASA Tbk",
+    "RIMO":  "RIMO INTERNATIONAL LESTARI Tbk",
+    "ELIT":  "DATA SINERGITAMA JAYA Tbk",
+    "BTON":  "BETONJAYA MANUNGGAL Tbk",
+    "MDIA":  "INTERMEDIA CAPITAL Tbk",
+    "ASPR":  "ASIA PRAMULIA Tbk",
+    "PGLI":  "PEMBANGUNAN GRAHA LESTARI INDAH Tbk",
+    "TARA":  "AGUNG SEMESTA SEJAHTERA Tbk",
+    "TRUK":  "GUNA TIMUR RAYA Tbk",
+    "KIOS":  "KIOSON KOMERSIAL INDONESIA Tbk",
+    "DGIK":  "NUSA KONSTRUKSI ENJINIRING Tbk",
+    "BBMD":  "BANK MESTIKA DHARMA Tbk",
+    "PSSI":  "IMC PELITA LOGISTIK Tbk",
+    "ATAP":  "TRIMITRA PRAWARA GOLDLAND Tbk",
+    "BOAT":  "NEWPORT MARINE SERVICES Tbk",
+    "SCPI":  "ORGANON PHARMA INDONESIA Tbk",
+    "KLIN":  "KLINKO KARYA IMAJI Tbk",
+    "BJTM":  "BANK PEMBANGUNAN DAERAH JAWA TIMUR Tbk",
+    "SMMA":  "SINAR MAS MULTIARTHA Tbk",
+    "DEWA":  "DARMA HENWA Tbk",
+    "AISA":  "FKS FOOD SEJAHTERA Tbk",
+    "AHAP":  "ASURANSI HARTA AMAN PRATAMA Tbk",
+    "EDGE":  "INDOINTERNET Tbk",
+    "MLBI":  "MULTI BINTANG INDONESIA Tbk",
+    "CHIP":  "PELITA TEKNOLOGI GLOBAL Tbk",
+    "NRCA":  "NUSA RAYA CIPTA Tbk",
+    "PTMP":  "MITRA PACK Tbk",
+    "SKYB":  "NORTHCLIFF CITRANUSA INDONESIA Tbk",
+    "ARMY":  "ARMIDIAN KARYATAMA Tbk",
+    "JIHD":  "JAKARTA INTERNATIONAL HOTELS \u0026 DEVELOPMEN",
+    "KSIX":  "KENTANIX SUPRA INTERNATIONAL Tbk",
+    "NICK":  "CHARNIC CAPITAL Tbk",
+    "FILM":  "MD ENTERTAINMENT Tbk",
+    "UDNG":  "AGRO BAHARI NUSANTARA Tbk",
+    "STAA":  "SUMBER TANI AGUNG RESOURCES Tbk",
+    "BATR":  "BENTENG API TECHNIC Tbk",
+    "FIMP":  "FIMPERKASA UTAMA Tbk",
+    "KOCI":  "KOKOH EXA NUSANTARA Tbk",
+    "APLN":  "AGUNG PODOMORO LAND Tbk",
+    "ABDA":  "ASURANSI BINA DANA ARTA Tbk",
+    "BIKE":  "SEPEDA BERSAMA INDONESIA Tbk",
+    "IGAR":  "CHAMPION PACIFIC INDONESIA Tbk",
+    "DGWG":  "DELTA GIRI WACANA Tbk",
+    "BLES":  "SUPERIOR PRIMA SUKSES Tbk",
+    "SNLK":  "SUNTER LAKESIDE HOTEL Tbk",
+    "AMMN":  "AMMAN MINERAL INTERNASIONAL Tbk",
+    "BJBR":  "BANK JABAR BANTEN Tbk",
+    "LPIN":  "MULTI PRIMA SEJAHTERA Tbk",
+    "FWCT":  "WIJAYA CAHAYA TIMBER Tbk",
+    "SURI":  "MAJA AGUNG LATEXINDO Tbk",
+    "MYOH":  "SAMINDO RESOURCES Tbk",
+    "BUMI":  "BUMI RESOURCES Tbk",
+    "IIKP":  "INTI AGRI RESOURCES Tbk",
+    "IPCC":  "INDONESIA KENDARAAN TERMINAL Tbk",
+    "CBMF":  "CAHAYA BINTANG MEDAN Tbk",
+    "BBTN":  "BANK TABUNGAN NEGARA (PERSERO) Tbk",
+    "ALII":  "ANCARA LOGISTICS INDONESIA Tbk",
+    "LAJU":  "JASA BERDIKARI LOGISTICS Tbk",
+    "ESTA":  "ESTA MULTI USAHA Tbk",
+    "AVIA":  "AVIA AVIAN Tbk",
+    "HOTL":  "SARASWATI GRIYA LESTARI Tbk",
+    "HRUM":  "HARUM ENERGY Tbk",
+    "CFIN":  "CLIPAN FINANCE INDONESIA Tbk",
+    "ZBRA":  "DOSNI ROHA INDONESIA Tbk",
+    "INAF":  "INDOFARMA Tbk",
+    "NEST":  "ESTA INDONESIA Tbk",
+    "KOTA":  "DMS PROPERTINDO Tbk",
+    "ASSA":  "ADI SARANA ARMADA Tbk",
+    "DART":  "DUTA ANGGADA REALTY Tbk",
+    "PEHA":  "PHAPROS Tbk",
+    "KOKA":  "KOKA INDONESIA Tbk",
+    "TIRT":  "TIRTA MAHAKAM RESOURCES Tbk",
+    "BRPT":  "BARITO PACIFIC Tbk",
+    "AMOR":  "ASHMORE ASSET MANAGEMENT INDONESIA Tbk",
+    "BAUT":  "MITRA ANGKASA SEJAHTERA Tbk",
+    "PGUN":  "PRADIKSI GUNATAMA Tbk",
+    "SAMF":  "SARASWANTI ANUGERAH MAKMUR Tbk",
+    "VICI":  "VICTORIA CARE INDONESIA Tbk",
+    "ADHI":  "ADHI KARYA (PERSERO) Tbk",
+    "AYLS":  "AGRO YASA LESTARI Tbk",
+    "IKAI":  "INTIKERAMIK ALAMASRI INDUSTRI Tbk",
+    "BMRI":  "BANK MANDIRI ( PERSERO ) Tbk",
+    "UNVR":  "UNILEVER INDONESIA Tbk",
+    "DMMX":  "DIGITAL MEDIATAMA MAXIMA Tbk",
+    "EXCL":  "XLSMART TELECOM SEJAHTERA Tbk",
+    "ENAK":  "CHAMP RESTO INDONESIA Tbk",
+    "SIMP":  "SALIM IVOMAS PRATAMA Tbk",
+    "IRSX":  "FOLAGO GLOBAL NUSANTARA Tbk",
+    "BLUE":  "BERKAH PRIMA PERKASA Tbk",
+    "PSAT":  "PANCARAN SAMUDERA TRANSPORT Tbk",
+    "AEGS":  "ANUGERAH SPAREPARTS SEJAHTERA Tbk",
+    "BBSI":  "KROM BANK INDONESIA Tbk",
+    "PCAR":  "PRIMA CAKRAWALA ABADI Tbk",
+    "IDPR":  "INDONESIA PONDASI RAYA Tbk",
+    "IPPE":  "INDO PURECO PRATAMA Tbk",
+    "ARTA":  "ARTHAVEST Tbk",
+    "HOME":  "HOTEL MANDARINE REGENCY Tbk",
+    "EAST":  "EASTPARC HOTEL Tbk",
+    "NANO":  "NANOTECH INDONESIA GLOBAL Tbk",
+    "INDF":  "INDOFOOD SUKSES MAKMUR Tbk",
+    "ALDO":  "ALKINDO NARATAMA Tbk",
+    "BEST":  "BEKASI FAJAR INDUSTRIAL ESTATE Tbk",
+    "PJHB":  "PELAYARAN JAYA HIDUP BARU Tbk",
+    "MKNT":  "MITRA KOMUNIKASI NUSANTARA Tbk",
+    "KKGI":  "RESOURCE ALAM INDONESIA Tbk",
+    "SIPD":  "SREEYA SEWU INDONESIA Tbk",
+    "YOII":  "ASURANSI DIGITAL BERSAMA Tbk",
+    "IPTV":  "MNC VISION NETWORKS Tbk",
+    "MLPL":  "MULTIPOLAR Tbk",
+    "CDIA":  "CHANDRA DAYA INVESTASI Tbk",
+    "GMTD":  "GOWA MAKASSAR TOURISM DEVELOPMENT Tbk",
+    "PTSP":  "PIONEERINDO GOURMET INTERNATIONAL Tbk",
+    "TBLA":  "TUNAS BARU LAMPUNG Tbk",
+    "FPNI":  "LOTTE CHEMICAL TITAN Tbk",
+    "KONI":  "PERDANA BANGUN PUSAKA Tbk",
+    "ATIC":  "ANABATIC TECHNOLOGIES Tbk",
+    "ESTI":  "EVER SHINE TEXTILE INDUSTRY",
+    "SMDM":  "SURYAMAS DUTAMAKMUR Tbk",
+    "GSMF":  "EQUITY DEVELOPMENT INVESTMENT Tbk",
+    "DATA":  "REMALA ABADI Tbk",
+    "IOTF":  "SUMBER SINERGI MAKMUR Tbk",
+    "TOYS":  "SUNINDO ADIPERSADA Tbk",
+    "RMKO":  "ROYALTAMA MULIA KONTRAKTORINDO Tbk",
+    "BMAS":  "BANK MASPION INDONESIA Tbk",
+    "YULE":  "YULIE SEKURITAS INDONESIA Tbk",
+    "CUAN":  "PETRINDO JAYA KREASI Tbk",
+    "MGRO":  "MAHKOTA GROUP Tbk",
+    "DEAL":  "DEWATA FREIGHTINTERNATIONAL Tbk",
+    "NAYZ":  "HASSANA BOGA SEJAHTERA TBK",
+    "BSIM":  "BANK SINAR MAS Tbk",
+    "MINA":  "SANURHASTA MITRA Tbk",
+    "RUIS":  "RADIANT UTAMA INTERINSCO Tbk",
+    "NASA":  "ANDALAN PERKASA ABADI Tbk",
+    "FIRE":  "ALFA ENERGI INVESTAMA Tbk",
+    "JRPT":  "JAYA REAL PROPERTY Tbk",
+    "CARE":  "METRO HEALTHCARE INDONESIA Tbk",
+    "DKFT":  "CENTRAL OMEGA RESOURCES Tbk",
+    "AXIO":  "TERA DATA INDONUSA Tbk",
+    "KUAS":  "ACE OLDFIELDS Tbk",
+    "SHIP":  "SILLO MARITIME PERDANA Tbk",
+    "GLVA":  "GALVA TECHNOLOGIES Tbk",
+    "KRAS":  "KRAKATAU STEEL Tbk",
+    "PDES":  "DESTINASI TIRTA NUSANTARA Tbk",
+    "ZYRX":  "ZYREXINDO MANDIRI BUANA Tbk",
+    "JECC":  "JEMBO CABLE COMPANY Tbk",
+    "TOBA":  "TBS ENERGI UTAMA Tbk",
+    "GAMA":  "AKSARA GLOBAL DEVELOPMENT Tbk",
+    "KLAS":  "PELAYARAN KURNIA LAUTAN SEMESTA Tbk",
+    "DEFI":  "DANASUPRA ERAPACIFIC Tbk",
+    "ELTY":  "BAKRIELAND DEVELOPMENT Tbk",
+    "CMPP":  "AIRASIA INDONESIA Tbk",
+    "ARNA":  "ARWANA CITRAMULIA Tbk",
+    "BHAT":  "BHAKTI MULTI ARTHA Tbk",
+    "DCII":  "DCI INDONESIA Tbk",
+    "PPRO":  "PP Properti Tbk",
+    "MIDI":  "MIDI UTAMA INDONESIA Tbk",
+    "RANC":  "SUPRA BOGA LESTARI Tbk",
+    "TMAS":  "TEMAS Tbk",
+    "MPIX":  "MITRA PEDAGANG INDONESIA Tbk",
+    "SLIS":  "GAYA ABADI SEMPURNA Tbk",
+    "MCOR":  "BANK CHINA CONSTRUCTION BANK INDONESIA Tbk",
+    "BCAP":  "MNC KAPITAL INDONESIA Tbk",
+    "GDYR":  "GOODYEAR INDONESIA Tbk",
+    "PDPP":  "PRIMADAYA PLASTISINDO Tbk",
+    "AGII":  "SAMATOR INDO GAS Tbk",
+    "BSBK":  "WULANDARI BANGUN LAKSANA Tbk",
+    "WOWS":  "GINTING JAYA ENERGI Tbk",
+    "LPKR":  "LIPPO KARAWACI Tbk",
+    "WOMF":  "WAHANA OTTOMITRA MULTIARTHA Tbk",
+    "SCMA":  "SURYA CITRA MEDIA Tbk",
+    "MITI":  "MITRA INVESTINDO Tbk",
+    "DEWI":  "DEWI SHRI FARMINDO Tbk",
+    "SSTM":  "SUNSON TEXTILE MANUFACTURER Tbk",
+    "PUDP":  "PUDJIADI PRESTIGE Tbk",
+    "LPCK":  "LIPPO CIKARANG Tbk",
+    "ISAT":  "INDOSAT Tbk",
+    "BEBS":  "BERKAH BETON SADAYA Tbk",
+    "HEAL":  "MEDIKALOKA HERMINA Tbk",
+    "GRPH":  "GRIPTHA PUTRA PERSADA Tbk",
+    "ITMA":  "SUMBER ENERGI ANDALAN Tbk",
+    "PACK":  "ABADI NUSANTARA HIJAU INVESTAMA Tbk",
+    "ACST":  "ACSET INDONUSA Tbk",
+    "AIMS":  "ARTHA MAHIYA INVESTAMA Tbk",
+    "RMKE":  "RMK ENERGY Tbk",
+    "GMFI":  "GARUDA MAINTENANCE FACILITY AERO ASIA Tbk",
+    "WSBP":  "WASKITA BETON PRECAST Tbk",
+    "DIVA":  "DISTRIBUSI VOUCHER NUSANTARA Tbk",
+    "ISEA":  "INDO AMERICAN SEAFOODS Tbk",
+    "NINE":  "TECHNO9 INDONESIA Tbk",
+    "TOPS":  "TOTALINDO EKA PERSADA Tbk",
+    "MBMA":  "MERDEKA BATTERY MATERIALS Tbk",
+    "KOPI":  "MITRA ENERGI PERSADA Tbk",
+    "CRAB":  "TOBA SURIMI INDUSTRIES Tbk",
+    "MKTR":  "MENTHOBI KARYATAMA RAYA Tbk",
+    "TGUK":  "PLATINUM WAHAB NUSANTARA Tbk",
+    "MASB":  "BANK MULTIARTA SENTOSA Tbk",
+    "ACES":  "ASPIRASI HIDUP INDONESIA Tbk",
+    "DSNG":  "DHARMA SATYA NUSANTARA Tbk",
+    "DOSS":  "GLOBAL SUKSES DIGITAL Tbk",
+    "KBLI":  "KMI Wire and Cable Tbk",
+    "LUCY":  "LIMA DUA LIMA TIGA Tbk",
+    "ADMG":  "POLYCHEM INDONESIA Tbk",
+    "MDLN":  "MODERNLAND REALTY Tbk",
+    "MTFN":  "CAPITALINC INVESTMENT Tbk",
+    "BRIS":  "BANK SYARIAH INDONESIA Tbk",
+    "MEJA":  "HARTA DJAYA KARYA Tbk",
+    "LPLI":  "STAR PACIFIC Tbk",
+    "MAPI":  "MITRA ADIPERKASA Tbk",
+    "PLAN":  "PLANET PROPERINDO JAYA Tbk",
+    "BOSS":  "BORNEO OLAH SARANA SUKSES Tbk",
+    "MDRN":  "MODERN INTERNASIONAL Tbk",
+    "BISI":  "BISI INTERNATIONAL Tbk",
+    "STTP":  "SIANTAR TOP Tbk",
+    "GOLF":  "INTRA GOLFLINK RESORTS Tbk",
+    "PRDA":  "PRODIA WIDYAHUSADA Tbk",
+    "BMBL":  "LAVENDER BINA CENDIKIA Tbk",
+    "BDKR":  "BERDIKARI PONDASI PERKASA Tbk",
+    "KPIG":  "MNC LAND Tbk",
+    "BAIK":  "BERSAMA MENCAPAI PUNCAK Tbk",
+    "EMDE":  "MEGAPOLITAN DEVELOPMENTS Tbk",
+    "SSIA":  "SURYA SEMESTA INTERNUSA Tbk",
+    "APIC":  "PACIFIC STRATEGIC FINANCIAL Tbk",
+    "KREN":  "QUANTUM CLOVERA INVESTAMA Tbk",
+    "PMUI":  "PRIMA MULTI USAHA INDONESIA Tbk",
+    "LCKM":  "LCK GLOBAL KEDATON Tbk",
+    "BRNA":  "BERLINA Tbk",
+    "ITMG":  "INDO TAMBANGRAYA MEGAH Tbk",
+    "FOLK":  "MULTI GARAM UTAMA Tbk",
+    "AMAN":  "MAKMUR BERKAH AMANDA Tbk",
+    "CCSI":  "COMMUNICATION CABLE SYSTEMS INDONESIA Tbk",
+    "KEEN":  "KENCANA ENERGI LESTARI Tbk",
+    "INCO":  "VALE INDONESIA Tbk",
+    "CHEM":  "CHEMSTAR INDONESIA Tbk",
+    "FUJI":  "FUJI FINANCE INDONESIA Tbk",
+    "ENRG":  "ENERGI MEGA PERSADA Tbk",
+    "BRAM":  "INDO KORDSA Tbk",
+    "ARKO":  "ARKORA HYDRO Tbk",
+    "MENN":  "MENN TEKNOLOGI INDONESIA Tbk",
+    "ARII":  "ATLAS RESOURCES Tbk",
+    "WIDI":  "WIDIANT JAYA KRENINDO Tbk",
+    "TEBE":  "DANA BRATA LUHUR Tbk",
+    "OBAT":  "BRIGIT BIOFARMAKA TEKNOLOGI Tbk",
+    "ESSA":  "ESSA INDUSTRIES INDONESIA Tbk",
+    "MAGP":  "MULTI AGRO GEMILANG PLANTATION Tbk",
+    "WINE":  "HATTEN BALI Tbk",
+    "PMMP":  "PANCA MITRA MULTIPERDANA Tbk",
+    "IATA":  "MNC ENERGY INVESTMENTS Tbk",
+    "ERAA":  "ERAJAYA SWASEMBADA Tbk",
+    "PADA":  "PERSONEL ALIH DAYA Tbk",
+    "INCF":  "INDO KOMODITI KORPORA Tbk",
+    "VTNY":  "VENTENY FORTUNA INTERNATIONAL Tbk",
+    "MDIY":  "DAYA INTIGUNA YASA Tbk",
+    "NISP":  "BANK OCBC NISP Tbk",
+    "MOLI":  "MADUSARI MURNI INDAH Tbk",
+    "MNCN":  "MEDIA NUSANTARA CITRA Tbk",
+    "EMAS":  "MERDEKA GOLD RESOURCES Tbk",
+    "RLCO":  "ABADI LESTARI INDONESIA Tbk",
+    "DPNS":  "DUTA PERTIWI NUSANTARA",
+    "MEDS":  "HETZER MEDICAL INDONESIA Tbk",
+    "PTBA":  "BUKIT ASAM Tbk",
+    "OKAS":  "ANCORA INDONESIA RESOURCES Tbk",
+    "BSDE":  "BUMI SERPONG DAMAI Tbk",
+    "MGNA":  "MAGNA INVESTAMA MANDIRI Tbk",
+    "HELI":  "JAYA TRISHINDO Tbk",
+    "KRYA":  "BANGUN KARYA PERKASA JAYA Tbk",
+    "DWGL":  "DWI GUNA LAKSANA Tbk",
+    "BPTR":  "BATAVIA PROSPERINDO TRANS Tbk",
+    "SAPX":  "SATRIA ANTARAN PRIMA Tbk",
+    "MYOR":  "MAYORA INDAH Tbk",
+    "LMAX":  "LUPROMAX PELUMAS INDONESIA Tbk",
+    "ROCK":  "ROCKFIELDS PROPERTI INDONESIA Tbk",
+    "TECH":  "INDOSTERLING TECHNOMEDIA Tbk",
+    "NASI":  "WAHANA INTI MAKMUR Tbk",
+    "INPS":  "INDAH PRAKASA SENTOSA Tbk",
+    "LABS":  "UBC MEDICAL INDONESIA Tbk",
+    "AGAR":  "ASIA SEJAHTERA MINA Tbk",
+    "IMAS":  "INDOMOBIL SUKSES INTERNASIONAL Tbk",
+    "UNIT":  "CAHAYA PERMATA SEJAHTERA Tbk",
+    "PNIN":  "PANINVEST Tbk",
+    "UFOE":  "DAMAI SEJAHTERA ABADI Tbk",
+    "ERAL":  "SINAR EKA SELARAS Tbk",
+    "SWID":  "SARASWANTI INDOLAND DEVELOPMENT Tbk",
+    "BALI":  "BALI TOWERINDO SENTRA Tbk",
+    "MARK":  "MARK DYNAMICS INDONESIA Tbk",
+    "DMAS":  "PURADELTA LESTARI Tbk",
+    "SHID":  "HOTEL SAHID JAYA INTERNATIONAL Tbk",
+    "BABP":  "BANK MNC INTERNASIONAL Tbk",
+    "GZCO":  "GOZCO PLANTATIONS Tbk",
+    "RONY":  "ARACORD NUSANTARA GROUP Tbk",
+    "JSMR":  "JASA MARGA (PERSERO) Tbk",
+    "LSIP":  "PP LONDON SUMATRA INDONESIA Tbk",
+    "BINO":  "PERMA PLASINDO Tbk",
+    "MPXL":  "MPX LOGISTICS INTERNATIONAL Tbk",
+    "DADA":  "DIAMOND CITRA PROPERTINDO Tbk",
+    "IMJS":  "INDOMOBIL MULTI JASA Tbk",
+    "VISI":  "SATU VISI PUTRA Tbk",
+    "ALMI":  "ALUMINDO LIGHT METAL INDUSTRY Tbk",
+    "JGLE":  "GRAHA ANDRASENTRA PROPERTINDO Tbk",
+    "CITA":  "CITA MINERAL INVESTINDO Tbk",
+    "BBRM":  "PELAYARAN NASIONAL BINA BUANA RAYA Tbk",
+    "STRK":  "LOVINA BEACH BREWERY Tbk",
+    "SPTO":  "SURYA PERTIWI Tbk",
+    "INTD":  "INTER DELTA Tbk",
+    "BUKK":  "BUKAKA TEKNIK UTAMA Tbk",
+    "FOOD":  "SENTRA FOOD INDONESIA Tbk",
+    "VRNA":  "MIZUHO LEASING INDONESIA Tbk",
+    "PBSA":  "PARAMITA BANGUN SARANA Tbk",
+    "ANDI":  "ANDIRA AGRO Tbk",
+    "IMPC":  "IMPACK PRATAMA INDUSTRI Tbk",
+    "AWAN":  "ERA DIGITAL MEDIA Tbk",
+    "CYBR":  "ITSEC ASIA Tbk",
+    "MPOW":  "MEGAPOWER MAKMUR Tbk",
+    "KMTR":  "KIRANA MEGATARA Tbk",
+    "SMBR":  "SEMEN BATURAJA Tbk",
+    "KJEN":  "KRIDA JARINGAN NUSANTARA Tbk",
+    "ASMI":  "ASURANSI MAXIMUS GRAHA PERSADA Tbk",
+    "SOTS":  "SATRIA MEGA KENCANA Tbk",
+    "POLI":  "POLLUX HOTELS GROUP Tbk",
+    "BYAN":  "BAYAN RESOURCES Tbk",
+    "MTMH":  "MURNI SADAR Tbk",
+    "MERI":  "MERRY RIANA EDUKASI Tbk",
+    "ASRM":  "ASURANSI RAMAYANA Tbk",
+    "CTRA":  "CIPUTRA DEVELOPMENT Tbk",
+    "BEER":  "JOBUBU JARUM MINAHASA Tbk",
+    "BELL":  "TRISULA TEXTILE INDUSTRIES Tbk",
+    "PMJS":  "PUTRA MANDIRI JEMBAR Tbk",
+    "WMPP":  "WIDODO MAKMUR PERKASA Tbk",
+    "PIPA":  "MULTI MAKMUR LEMINDO Tbk",
+    "BEEF":  "ESTIKA TATA TIARA Tbk",
+    "SQMI":  "WILTON MAKMUR INDONESIA Tbk",
+    "MAXI":  "MAXINDO KARYA ANUGERAH Tbk",
+    "MLIA":  "MULIA INDUSTRINDO Tbk",
+    "SRIL":  "SRI REJEKI ISMAN Tbk",
+    "PTPP":  "PP (PERSERO) Tbk",
+    "VINS":  "VICTORIA INSURANCE Tbk",
+    "TRIO":  "TRIKOMSEL OKE Tbk",
+    "OBMD":  "OBM DRILCHEM Tbk",
+    "KINO":  "KINO INDONESIA Tbk",
+    "LPGI":  "LIPPO GENERAL INSURANCE Tbk",
+    "ASGR":  "ASTRA GRAPHIA Tbk",
+    "BRRC":  "RAJA ROTI CEMERLANG Tbk",
+    "TKIM":  "PABRIK KERTAS TJIWI KIMIA Tbk",
+    "GEMA":  "GEMA GRAHASARANA Tbk",
+    "PTMR":  "MASTER PRINT Tbk",
+    "SAFE":  "STEADY SAFE Tbk",
+    "SMRA":  "SUMMARECON AGUNG Tbk",
+    "BOLA":  "BALI BINTANG SEJAHTERA Tbk",
+    "WICO":  "WICAKSANA OVERSEAS INTERNATIONAL Tbk",
+    "SCNP":  "SELARAS CITRA NUSANTARA PERKASA Tbk",
+    "PTPW":  "PRATAMA WIDYA Tbk",
+    "BPFI":  "WOORI FINANCE INDONESIA Tbk",
+    "LAND":  "TRIMITRA PROPERTINDO Tbk",
+    "BMTR":  "GLOBAL MEDIACOM Tbk",
+    "LEAD":  "LOGINDO SAMUDRAMAKMUR Tbk",
+    "HITS":  "HUMPUSS INTERMODA TRANSPORTASI Tbk",
+    "LUCK":  "SENTRAL MITRA INFORMATIKA Tbk",
+    "SUNI":  "SUNINDO PRATAMA Tbk",
+    "HMSP":  "HANJAYA MANDALA SAMPOERNA Tbk",
+    "SDPC":  "MILLENNIUM PHARMACON INTERNATIONAL Tbk",
+    "BACA":  "BANK CAPITAL INDONESIA Tbk",
+    "ISSP":  "STEEL PIPE INDUSTRY OF INDONESIA Tbk",
+    "UNIC":  "UNGGUL INDAH CAHAYA Tbk",
+    "WIRG":  "WIR ASIA Tbk",
+    "BUKA":  "BUKALAPAK.COM Tbk",
+    "CAKK":  "CAHAYAPUTRA ASA KERAMIK Tbk",
+    "TOTL":  "TOTAL BANGUN PERSADA Tbk",
+    "NIKL":  "PELAT TIMAH NUSANTARA Tbk",
+    "JAST":  "JASNITA TELEKOMINDO Tbk",
+    "ELPI":  "PELAYARAN NASIONAL EKALYA PURNAMASARI Tbk",
+    "DLTA":  "DELTA DJAKARTA Tbk",
+    "INRU":  "TOBA PULP LESTARI Tbk",
+    "VIVA":  "VISI MEDIA ASIA Tbk",
+    "ADCP":  "ADHI COMMUTER PROPERTI Tbk",
+    "JATI":  "INFORMASI TEKNOLOGI INDONESIA Tbk",
+    "BNBR":  "BAKRIE AND BROTHERS Tbk",
+    "PSGO":  "PALMA SERASIH Tbk",
+    "CBPE":  "CITRA BUANA PRASIDA Tbk",
+    "MKPI":  "METROPOLITAN KENTJANA Tbk",
+    "TIFA":  "KDB TIFA FINANCE Tbk",
+    "RAFI":  "SARI KREASI BOGA Tbk",
+    "TNCA":  "TRIMUDA NUANSA CITRA Tbk",
+    "DUCK":  "JAYA BERSAMA INDO Tbk",
+    "ATLA":  "ATLANTIS SUBSEA INDONESIA Tbk",
+    "MDKA":  "MERDEKA COPPER GOLD Tbk",
+    "CNMA":  "NUSANTARA SEJAHTERA RAYA Tbk",
+    "SPRE":  "SORAYA BERJAYA INDONESIA Tbk",
+    "KBAG":  "KARYA BERSAMA ANUGERAH Tbk",
+    "ASDM":  "ASURANSI DAYIN MITRA Tbk",
+    "PURA":  "PUTRA RAJAWALI KENCANA Tbk",
+    "MTLA":  "METROPOLITAN LAND Tbk",
+    "TYRE":  "KING TIRE INDONESIA Tbk",
+    "META":  "NUSANTARA INFRASTRUCTURE Tbk",
+    "MIRA":  "MITRA INTERNATIONAL RESOURCES Tbk",
+    "ABBA":  "MAHAKA MEDIA Tbk",
+    "KETR":  "KETROSDEN TRIASMITRA Tbk",
+    "TAPG":  "TRIPUTRA AGRO PERSADA Tbk",
+    "TPIA":  "CHANDRA ASRI PACIFIC Tbk",
+    "PANI":  "PANTAI INDAH KAPUK DUA Tbk",
+    "MEDC":  "MEDCO ENERGI INTERNASIONAL Tbk",
+    "BOBA":  "FORMOSA INGREDIENT FACTORY Tbk",
+    "MIKA":  "MITRA KELUARGA KARYASEHAT Tbk",
+    "CSMI":  "CIPTA SELERA MURNI Tbk",
+    "TOWR":  "SARANA MENARA NUSANTARA Tbk",
+    "BOGA":  "APOLLO GLOBAL INTERACTIVE Tbk",
+    "INTA":  "INTRACO PENTA Tbk",
+    "JMAS":  "ASURANSI JIWA SYARIAH JASA MITRA ABADI Tbk",
+    "AGRS":  "BANK IBK INDONESIA Tbk",
+    "MMIX":  "MULTI MEDIKA INTERNASIONAL Tbk",
+    "EURO":  "ESTEE GOLD FEET Tbk",
+    "MSTI":  "MASTERSYSTEM INFOTAMA Tbk",
+    "FMII":  "FORTUNE MATE INDONESIA Tbk",
+    "MTWI":  "MALACCA TRUST WUWUNGAN INSURANCE Tbk",
+    "PBRX":  "PAN BROTHERS Tbk",
+    "HILL":  "HILLCON Tbk",
+    "MICE":  "MULTI INDOCITRA Tbk",
+    "IPCM":  "JASA ARMADA INDONESIA Tbk",
+    "INET":  "SINERGI INTI ANDALAN PRIMA Tbk",
+    "LCGP":  "EUREKA PRIMA JAKARTA Tbk",
+    "OILS":  "INDO OIL PERKASA Tbk",
+    "BCIP":  "BUMI CITRA PERMAI Tbk",
+    "VOKS":  "VOKSEL ELECTRIC Tbk",
+    "MERK":  "MERCK Tbk",
+    "LOPI":  "LOGISTICSPLUS INTERNATIONAL Tbk",
+    "IFII":  "INDONESIA FIBREBOARD INDUSTRY Tbk",
+    "ASBI":  "ASURANSI BINTANG Tbk",
+    "ICON":  "ISLAND CONCEPTS INDONESIA Tbk",
+    "YUPI":  "YUPI INDO JELLY GUM Tbk",
+    "CPRI":  "CAPRI NUSA SATU PROPERTI Tbk",
+    "MKAP":  "MULTIKARYA ASIA PASIFIK RAYA Tbk",
+    "POWR":  "CIKARANG LISTRINDO Tbk",
+    "PORT":  "NUSANTARA PELABUHAN HANDAL Tbk",
+    "KEJU":  "MULIA BOGA RAYA Tbk",
+    "AREA":  "DUNIA VIRTUAL ONLINE Tbk",
+    "TRUE":  "TRINITI DINAMIK Tbk",
+    "BSML":  "BINTANG SAMUDERA MANDIRI LINES Tbk",
+    "ENZO":  "MORENZO ABADI PERKASA Tbk",
+    "SCCO":  "SUPREME CABLE MANUFACTURING \u0026 COMMERCE",
+    "OMRE":  "INDONESIA PRIMA PROPERTY Tbk",
+    "BPII":  "BATAVIA PROSPERINDO INTERNASIONAL Tbk",
+    "MSIN":  "MNC DIGITAL ENTERTAINMENT Tbk",
+    "BSWD":  "BANK OF INDIA INDONESIA Tbk",
+    "KBLM":  "KABELINDO MURNI Tbk",
+    "KAYU":  "DARMI BERSAUDARA Tbk",
+    "TRON":  "TEKNOLOGI KARYA DIGITAL NUSA Tbk",
+    "PURI":  "PURI GLOBAL SUKSES Tbk",
+    "WOOD":  "INTEGRA INDOCABINET Tbk",
+    "PTRO":  "PETROSEA Tbk",
+    "RELF":  "GRAHA MITRA ASIA Tbk",
+    "GWSA":  "GREENWOOD SEJAHTERA Tbk",
+    "POSA":  "BLISS PROPERTI INDONESIA Tbk",
+    "BHIT":  "MNC ASIA HOLDING Tbk",
+    "ALTO":  "TRI BANYAN TIRTA Tbk",
+    "RCCC":  "UTAMA RADAR CAHAYA Tbk",
+    "BTPS":  "BANK BTPN SYARIAH Tbk",
+    "PZZA":  "SARIMELATI KENCANA Tbk",
+    "TRIS":  "TRISULA INTERNATIONAL Tbk",
+    "COIN":  "INDOKRIPTO KOIN SEMESTA Tbk",
+    "SBMA":  "SURYA BIRU MURNI ACETYLENE Tbk",
+    "BTEL":  "BAKRIE TELECOM Tbk",
+    "CGAS":  "CITRA NUSANTARA GEMILANG Tbk",
+    "CRSN":  "CARSURIN Tbk",
+    "ARCI":  "ARCHI INDONESIA Tbk",
+    "RODA":  "PIKKO LAND DEVELOPMENT Tbk",
+    "DEPO":  "CATURKARDA DEPO BANGUNAN Tbk",
+    "HATM":  "HABCO TRANS MARITIMA Tbk",
+    "GGRP":  "GUNUNG RAJA PAKSI Tbk",
+    "HOMI":  "GRAND HOUSE MULIA Tbk",
+    "ECII":  "ELECTRONIC CITY INDONESIA Tbk",
+    "GHON":  "GIHON TELEKOMUNIKASI INDONESIA Tbk",
+    "GPRA":  "PERDANA GAPURAPRIMA Tbk",
+    "TSPC":  "TEMPO SCAN PACIFIC Tbk",
+    "WIIM":  "WISMILAK INTI MAKMUR Tbk",
+    "BNLI":  "BANK PERMATA Tbk",
+    "SUGI":  "SUGIH ENERGY Tbk, PT",
+    "EPAC":  "MEGALESTARI EPACK SENTOSARAYA Tbk",
+    "BKDP":  "BUKIT DARMO PROPERTY Tbk",
+    "JARR":  "JHONLIN AGRO RAYA Tbk",
+    "SIDO":  "INDUSTRI JAMU DAN FARMASI SIDO MUNCUL Tbk",
+    "POLA":  "POOL ADVISTA FINANCE Tbk",
+    "BOLT":  "GARUDA METALINDO Tbk",
+    "TALF":  "TUNAS ALFIN Tbk",
+    "MTSM":  "METRO REALTY Tbk, PT",
+    "DNAR":  "BANK OKE INDONESIA Tbk",
+    "BTPN":  "BANK SMBC INDONESIA Tbk",
+    "BAPI":  "BHAKTI AGUNG PROPERTINDO Tbk",
+    "TCPI":  "TRANSCOAL PACIFIC Tbk",
+    "ACRO":  "SAMCRO HYOSUNG ADILESTARI Tbk",
+    "TFAS":  "TELEFAST INDONESIA Tbk",
+    "ADES":  "AKASHA WIRA INTERNATIONAL Tbk",
+    "AGRO":  "BANK RAYA INDONESIA Tbk",
+    "HRME":  "MENTENG HERITAGE REALTY Tbk",
+    "COWL":  "COWELL DEVELOPMENT Tbk",
+    "AALI":  "ASTRA AGRO LESTARI Tbk",
+    "POLU":  "GOLDEN FLOWER Tbk",
+    "OPMS":  "OPTIMA PRIMA METAL SINERGI Tbk",
+    "SATU":  "KOTA SATU PROPERTI Tbk",
+    "SMIL":  "SARANA MITRA LUAS Tbk",
+    "JSKY":  "SKY ENERGY INDONESIA Tbk",
+    "BNII":  "BANK MAYBANK INDONESIA Tbk",
+    "RSGK":  "KEDOYA ADYARAYA Tbk",
+    "DPUM":  "DUA PUTRA UTAMA MAKMUR Tbk",
+    "HRTA":  "HARTADINATA ABADI Tbk",
+    "WAPO":  "WAHANA PRONATURAL Tbk",
+    "SOUL":  "MITRA TIRTA BUWANA Tbk",
+    "MBAP":  "MITRABARA ADIPERDANA Tbk",
+    "DYAN":  "DYANDRA MEDIA INTERNATIONAL Tbk",
+    "MGLV":  "PANCA ANUGRAH WISESA Tbk",
+    "BWPT":  "EAGLE HIGH PLANTATIONS, Tbk",
+    "GEMS":  "GOLDEN ENERGY MINES Tbk",
+    "CEKA":  "WILMAR CAHAYA INDONESIA Tbk",
+    "BANK":  "BANK ALADIN SYARIAH Tbk",
+    "ASII":  "ASTRA INTERNATIONAL Tbk",
+    "BCIC":  "BANK JTRUST INDONESIA Tbk",
+    "STAR":  "BUANA ARTHA ANUGERAH Tbk",
+    "DFAM":  "DAFAM PROPERTY INDONESIA Tbk",
+    "BATA":  "SEPATU BATA Tbk"
+}
+;
+
+    // DATABASE AUDIT 70+ SAHAM UTAMA IHSG DILENGKAPI ANALISIS LENGKAP
+    // ==============================================================
+    const stockDatabase = {
+      // 1. PANGAN & CONSUMER NON-CYCLICAL
+      "ICBP": { ticker: "ICBP", name: "PT Indofood CBP Sukses Makmur Tbk", sector: "Consumer Non-Cyclical (Pangan)", price: 6975, eps: 633.0, cfoPerShare: 810.0, bvps: 4524.6, dps: 265.0, growth: 7.5, targetPE: 14.0, targetPBV: 2.5, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Sangat Defensif (Pangan Pokok)", cyclicalityNote: "Mie instan & dairy dikonsumsi tiap hari, pricing power kuat.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 28.5, nonHalalRatio: 1.2, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Sangat Kuat (Cash Cow)", cfoToEps: 1.28 },
+      "INDF": { ticker: "INDF", name: "PT Indofood Sukses Makmur Tbk", sector: "Consumer Non-Cyclical (Holding Pangan)", price: 7000, eps: 1089.9, cfoPerShare: 1450.0, bvps: 8731.0, dps: 290.0, growth: 6.0, targetPE: 7.5, targetPBV: 1.0, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif dengan Paparan CPO", cyclicalityNote: "Valuasi holding discount sangat lebar, PBV di bawah 1.0x.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 32.0, nonHalalRatio: 1.5, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Sangat Kuat", cfoToEps: 1.33 },
+      "MYOR": { ticker: "MYOR", name: "PT Mayora Indah Tbk", sector: "Consumer Non-Cyclical (Makanan)", price: 1425, eps: 152.8, cfoPerShare: 185.0, bvps: 824.7, dps: 60.0, growth: 9.0, targetPE: 16.0, targetPBV: 3.0, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif & Ekspor Global", cyclicalityNote: "Kopiko & biskuit Roma merambah 100+ negara.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 22.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Positif Kuat", cfoToEps: 1.21 },
+      "UNVR": { ticker: "UNVR", name: "PT Unilever Indonesia Tbk", sector: "Consumer Non-Cyclical (Personal Care)", price: 1600, eps: 91.0, cfoPerShare: 110.0, bvps: 79.6, dps: 85.0, growth: 3.0, targetPE: 22.0, targetPBV: 18.0, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Defensif Kebutuhan Harian", cyclicalityNote: "Brand kuat di toiletries & personal care.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 18.0, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat (Cash Cow)", cfoToEps: 1.21 },
+      "SIDO": { ticker: "SIDO", name: "PT Industri Jamu & Farmasi Sido Muncul Tbk", sector: "Kesehatan & Herbal", price: 356, eps: 32.3, cfoPerShare: 33.5, bvps: 101.8, dps: 15.0, growth: 7.0, targetPE: 16.0, targetPBV: 4.5, cyclicality: "Defensive", cyclicalityScore: 10, cyclicalityDesc: "Puncak Defensif (Herbal)", cyclicalityNote: "100% laba jadi kas nyata, dividen payout mendekati 90%.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.8, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK. Zero Debt.", fcfStatus: "Murni Kas (100% Cash Conversion)", cfoToEps: 1.04 },
+      "ULTJ": { ticker: "ULTJ", name: "PT Ultrajaya Milk Industry Tbk", sector: "Consumer Non-Cyclical (Dairy)", price: 2100, eps: 172.9, cfoPerShare: 210.0, bvps: 762.3, dps: 45.0, growth: 7.0, targetPE: 14.0, targetPBV: 2.7, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Defensif Susu UHT", cyclicalityNote: "Pemimpin pasar susu UHT dan Teh Kotak.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 8.2, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Sehat", cfoToEps: 1.21 },
+      "CMRY": { ticker: "CMRY", name: "PT Cisarua Mountain Dairy Tbk", sector: "Consumer Non-Cyclical (Dairy & Sosis)", price: 4520, eps: 278.6, cfoPerShare: 310.0, bvps: 902.7, dps: 60.0, growth: 15.0, targetPE: 25.0, targetPBV: 5.0, cyclicality: "Defensive", cyclicalityScore: 25, cyclicalityDesc: "Pertumbuhan Konsumer Premium", cyclicalityNote: "Yogurt Cimory dan Sosis Kanzler bertumbuh pesat.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 5.5, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.11 },
+      "CLEO": { ticker: "CLEO", name: "PT Sariguna Primatirta Tbk", sector: "Consumer Non-Cyclical (Air Minum)", price: 442, eps: 17.9, cfoPerShare: 24.0, bvps: 104.4, dps: 6.0, growth: 16.0, targetPE: 30.0, targetPBV: 6.0, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Air Murni", cyclicalityNote: "Air murni galon bebas BPA ekspansi pabrik baru.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 12.0, nonHalalRatio: 0.1, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.34 },
+      "ROTI": { ticker: "ROTI", name: "PT Nippon Indosari Corpindo Tbk", sector: "Consumer Non-Cyclical (Bakery)", price: 560, eps: 33.8, cfoPerShare: 52.0, bvps: 283.7, dps: 40.0, growth: 4.0, targetPE: 16.0, targetPBV: 1.9, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Roti Harian", cyclicalityNote: "Sari Roti dominan di gerai minimarket.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 25.0, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.54 },
+      "STTP": { ticker: "STTP", name: "PT Siantar Top Tbk", sector: "Consumer Non-Cyclical (Snack)", price: 8900, eps: 944.5, cfoPerShare: 1100.0, bvps: 6026.1, dps: 150.0, growth: 12.0, targetPE: 12.0, targetPBV: 2.0, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Snack & Biskuit", cyclicalityNote: "Laba konsisten dengan neraca bersih.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 10.5, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.16 },
+      "CPIN": { ticker: "CPIN", name: "PT Charoen Pokphand Indonesia Tbk", sector: "Unggas & Protein Hewani", price: 2950, eps: 454.0, cfoPerShare: 510.0, bvps: 2128.1, dps: 120.0, growth: 10.0, targetPE: 20.0, targetPBV: 2.5, cyclicality: "Moderate", cyclicalityScore: 45, cyclicalityDesc: "Moderat (Pakan & Ayam)", cyclicalityNote: "Produsen daging ayam Fiesta & pakan ternak terbesar.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 19.5, nonHalalRatio: 0.4, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Kuat", cfoToEps: 1.12 },
+      "JPFA": { ticker: "JPFA", name: "PT Japfa Comfeed Indonesia Tbk", sector: "Unggas & Olahan Daging", price: 2000, eps: 449.0, cfoPerShare: 490.0, bvps: 1693.5, dps: 70.0, growth: 12.0, targetPE: 8.5, targetPBV: 1.2, cyclicality: "Moderate", cyclicalityScore: 50, cyclicalityDesc: "Moderat Agrikultur Unggas", cyclicalityNote: "Valuasi P/E menarik dengan diversifikasi So Good.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 31.0, nonHalalRatio: 0.6, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.09 },
+      "AALI": { ticker: "AALI", name: "PT Astra Agro Lestari Tbk", sector: "Perkebunan CPO", price: 8525, eps: 970.8, cfoPerShare: 1200.0, bvps: 12468.6, dps: 350.0, growth: 5.0, targetPE: 11.0, targetPBV: 0.8, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Komoditas CPO", cyclicalityNote: "Laba mengikuti harga CPO dunia. PBV di bawah 1.0x.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 8.5, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.24 },
+      "LSIP": { ticker: "LSIP", name: "PT PP London Sumatra Indonesia Tbk", sector: "Perkebunan CPO", price: 1480, eps: 302.7, cfoPerShare: 350.0, bvps: 2100.1, dps: 80.0, growth: 6.0, targetPE: 8.0, targetPBV: 0.7, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal CPO & Net Cash", cyclicalityNote: "Perusahaan CPO tanpa utang (net cash).", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.0, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Murni Kas", cfoToEps: 1.16 },
+      "TAPG": { ticker: "TAPG", name: "PT Triputra Agro Persada Tbk", sector: "Perkebunan CPO", price: 2060, eps: 203.8, cfoPerShare: 186.8, bvps: 576.3, dps: 60.0, growth: 12.0, targetPE: 10.0, targetPBV: 3.5, cyclicality: "Cyclical", cyclicalityScore: 75, cyclicalityDesc: "Siklikal CPO Tanaman Prima", cyclicalityNote: "Profil tanaman prima menghasilkan produktivitas tinggi.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 15.0, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 0.92 },
+
+      // 2. PERBANKAN SYARIAH & KONVENSIONAL
+      "BRIS": { ticker: "BRIS", name: "PT Bank Syariah Indonesia Tbk", sector: "Perbankan Syariah", price: 1325, eps: 173.0, cfoPerShare: 101.8, bvps: 1106.5, dps: 32.8, growth: 5.0, targetPE: 15.0, targetPBV: 2.0, cyclicality: "Defensive", cyclicalityScore: 25, cyclicalityDesc: "Defensif Finansial Syariah", cyclicalityNote: "Pilar utama ekonomi syariah nasional.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.0, nonHalalRatio: 0.0, shariaNote: "Saham Syariah Murni. Bebas risiko utang berbunga.", fcfStatus: "Positif (Kuat)", cfoToEps: 0.85 },
+      "BTPS": { ticker: "BTPS", name: "PT Bank BTPN Syariah Tbk", sector: "Perbankan Syariah", price: 1015, eps: 157.0, cfoPerShare: 160.0, bvps: 1331.6, dps: 70.0, growth: 6.0, targetPE: 8.0, targetPBV: 1.0, cyclicality: "Defensive", cyclicalityScore: 30, cyclicalityDesc: "Pembiayaan Mikro Syariah", cyclicalityNote: "Spesialis pembiayaan ibu prasejahtera produktif.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.0, nonHalalRatio: 0.0, shariaNote: "Saham Syariah Murni.", fcfStatus: "Positif", cfoToEps: 1.02 },
+      "BBCA": { ticker: "BBCA", name: "PT Bank Central Asia Tbk", sector: "Perbankan Konvensional", price: 6075, eps: 472.0, cfoPerShare: 520.0, bvps: 2201.5, dps: 25.0, growth: 11.0, targetPE: 22.0, targetPBV: 4.5, cyclicality: "Defensive", cyclicalityScore: 30, cyclicalityDesc: "Finansial Dominan", cyclicalityNote: "CASA tebal dan profitabilitas tinggi.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal (Bank Konvensional)", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.10 },
+      "BBRI": { ticker: "BBRI", name: "PT Bank Rakyat Indonesia Tbk", sector: "Perbankan Konvensional", price: 3100, eps: 407.0, cfoPerShare: 430.0, bvps: 2136.4, dps: 209.0, growth: 8.0, targetPE: 11.0, targetPBV: 2.0, cyclicality: "Defensive", cyclicalityScore: 35, cyclicalityDesc: "Finansial Mikro", cyclicalityNote: "Kredit UMKM terbesar.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal (Bank Konvensional)", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.06 },
+      "BMRI": { ticker: "BMRI", name: "PT Bank Mandiri Tbk", sector: "Perbankan Konvensional", price: 3980, eps: 667.3, cfoPerShare: 690.0, bvps: 3049.2, dps: 66.0, growth: 9.0, targetPE: 10.0, targetPBV: 1.8, cyclicality: "Defensive", cyclicalityScore: 35, cyclicalityDesc: "Finansial Korporasi", cyclicalityNote: "Aset terbesar di Indonesia.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.03 },
+      "BBNI": { ticker: "BBNI", name: "PT Bank Negara Indonesia Tbk", sector: "Perbankan Konvensional", price: 3420, eps: 555.0, cfoPerShare: 580.0, bvps: 4411.9, dps: 150.0, growth: 8.0, targetPE: 8.5, targetPBV: 1.1, cyclicality: "Defensive", cyclicalityScore: 35, cyclicalityDesc: "Finansial BUMN", cyclicalityNote: "Fokus korporasi & consumer.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.05 },
+      "BDMN": { ticker: "BDMN", name: "PT Bank Danamon Indonesia Tbk", sector: "Perbankan Konvensional", price: 5000, eps: 483.4, cfoPerShare: 490.0, bvps: 5557.8, dps: 120.0, growth: 6.0, targetPE: 9.0, targetPBV: 0.9, cyclicality: "Defensive", cyclicalityScore: 40, cyclicalityDesc: "Finansial MUFG", cyclicalityNote: "Didukung MUFG Group.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.01 },
+      "BBTN": { ticker: "BBTN", name: "PT Bank Tabungan Negara Tbk", sector: "Perbankan Konvensional", price: 1050, eps: 298.0, cfoPerShare: 310.0, bvps: 2676.1, dps: 50.0, growth: 7.0, targetPE: 6.0, targetPBV: 0.6, cyclicality: "Defensive", cyclicalityScore: 40, cyclicalityDesc: "Pembiayaan KPR", cyclicalityNote: "Spesialis KPR subsidi.", isSharia: false, businessHalal: false, businessDesc: "Non-Halal", debtRatio: 0.0, nonHalalRatio: 100.0, shariaNote: "TIDAK MASUK DES OJK.", fcfStatus: "Positif", cfoToEps: 1.04 },
+
+      // 3. ENERGI & TAMBANG
+      "PTBA": { ticker: "PTBA", name: "PT Bukit Asam Tbk", sector: "Energi & Batubara", price: 3310, eps: 412.0, cfoPerShare: 430.0, bvps: 2190.8, dps: 114.5, growth: 4.0, targetPE: 8.0, targetPBV: 1.5, cyclicality: "Cyclical", cyclicalityScore: 95, cyclicalityDesc: "Sangat Siklikal (Batu Bara)", cyclicalityNote: "Dividen konsisten, laba mengikuti harga batubara.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 14.0, nonHalalRatio: 1.5, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Sangat Positif", cfoToEps: 1.04 },
+      "ADRO": { ticker: "ADRO", name: "PT Alamtri Resources Indonesia Tbk", sector: "Energi & Batubara", price: 2530, eps: 339.6, cfoPerShare: 380.0, bvps: 0.2, dps: 118.3, growth: 8.0, targetPE: 7.5, targetPBV: 1.4, cyclicality: "Cyclical", cyclicalityScore: 90, cyclicalityDesc: "Sangat Siklikal Komoditas", cyclicalityNote: "Arus kas operasional jumbo.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 18.0, nonHalalRatio: 1.2, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Kuat", cfoToEps: 1.12 },
+      "ITMG": { ticker: "ITMG", name: "PT Indo Tambangraya Megah Tbk", sector: "Energi Batubara", price: 25700, eps: 3205.2, cfoPerShare: 3400.0, bvps: 1.7, dps: 1750.0, growth: 4.0, targetPE: 8.0, targetPBV: 1.2, cyclicality: "Cyclical", cyclicalityScore: 95, cyclicalityDesc: "Sangat Siklikal Komoditas", cyclicalityNote: "Raja dividen bursa dengan yield tinggi.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 5.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.06 },
+      "PGAS": { ticker: "PGAS", name: "PT Perusahaan Gas Negara Tbk", sector: "Infrastruktur Gas Bumi", price: 1390, eps: 159.5, cfoPerShare: 210.0, bvps: 0.1, dps: 140.0, growth: 4.5, targetPE: 7.5, targetPBV: 0.9, cyclicality: "Moderate", cyclicalityScore: 45, cyclicalityDesc: "Infrastruktur Gas", cyclicalityNote: "Distribusi gas pipa nasional dengan dividen yield menarik.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 29.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.32 },
+      "MEDC": { ticker: "MEDC", name: "PT Medco Energi Internasional Tbk", sector: "Minyak & Gas Bumi", price: 1500, eps: 230.9, cfoPerShare: 310.0, bvps: 0.1, dps: 32.3, growth: 8.0, targetPE: 6.5, targetPBV: 1.1, cyclicality: "Cyclical", cyclicalityScore: 85, cyclicalityDesc: "Siklikal Migas Dunia", cyclicalityNote: "Sensitif harga minyak mentah Brent/WTI.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 38.0, nonHalalRatio: 1.8, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Positif", cfoToEps: 1.34 },
+      "AKRA": { ticker: "AKRA", name: "PT AKR Corporindo Tbk", sector: "Logistik BBM & Kawasan Industri", price: 1475, eps: 137.6, cfoPerShare: 160.0, bvps: 654.5, dps: 75.0, growth: 10.0, targetPE: 10.5, targetPBV: 2.3, cyclicality: "Moderate", cyclicalityScore: 40, cyclicalityDesc: "Logistik & JIIPE Gresik", cyclicalityNote: "Didorong penjualan lahan industri JIIPE.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 16.5, nonHalalRatio: 0.9, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.16 },
+      "BUMI": { ticker: "BUMI", name: "PT Bumi Resources Tbk", sector: "Tambang Batubara", price: 168, eps: 5.5, cfoPerShare: 8.0, bvps: 0.0, dps: 0.0, growth: 15.0, targetPE: 15.0, targetPBV: 1.2, cyclicality: "Cyclical", cyclicalityScore: 95, cyclicalityDesc: "Sangat Siklikal", cyclicalityNote: "Volume batubara terbesar.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 12.0, nonHalalRatio: 1.0, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.45 },
+      "INDY": { ticker: "INDY", name: "PT Indika Energy Tbk", sector: "Energi", price: 2610, eps: 45.9, cfoPerShare: 90.0, bvps: 0.2, dps: 60.0, growth: 5.0, targetPE: 8.0, targetPBV: 0.8, cyclicality: "Cyclical", cyclicalityScore: 90, cyclicalityDesc: "Siklikal Transisi Energi", cyclicalityNote: "Diversifikasi motor listrik Alva & emas.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 35.0, nonHalalRatio: 1.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.96 },
+      "ELSA": { ticker: "ELSA", name: "PT Elnusa Tbk", sector: "Jasa Hulu Migas", price: 675, eps: 111.9, cfoPerShare: 140.0, bvps: 743.2, dps: 40.0, growth: 9.0, targetPE: 6.0, targetPBV: 0.9, cyclicality: "Moderate", cyclicalityScore: 55, cyclicalityDesc: "Jasa Hulu Migas Pertamina", cyclicalityNote: "Jasa pengeboran & distribusi BBM.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 11.0, nonHalalRatio: 0.6, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.25 },
+      "PGEO": { ticker: "PGEO", name: "PT Pertamina Geothermal Energy Tbk", sector: "Energi Panas Bumi", price: 990, eps: 60.7, cfoPerShare: 80.0, bvps: 0.0, dps: 30.0, growth: 8.0, targetPE: 16.0, targetPBV: 1.5, cyclicality: "Defensive", cyclicalityScore: 30, cyclicalityDesc: "Defensif Energi Hijau", cyclicalityNote: "Kontrak jangka panjang listrik PLN.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 24.0, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.32 },
+
+      // 4. MINERAL LOGAM & MATERIAL
+      "ANTM": { ticker: "ANTM", name: "PT Aneka Tambang Tbk", sector: "Mineral Emas & Nikel", price: 3100, eps: 370.4, cfoPerShare: 76.0, bvps: 1550.9, dps: 210.0, growth: 16.2, targetPE: 8.4, targetPBV: 2.0, cyclicality: "Cyclical", cyclicalityScore: 75, cyclicalityDesc: "Siklikal Emas & Nikel", cyclicalityNote: "Produsen emas batangan LBMA dan hilirisasi nikel.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 19.0, nonHalalRatio: 0.6, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Positif", cfoToEps: 0.21 },
+      "INCO": { ticker: "INCO", name: "PT Vale Indonesia Tbk", sector: "Pertambangan Nikel", price: 4100, eps: 248.0, cfoPerShare: 310.0, bvps: 0.3, dps: 0.0, growth: 6.0, targetPE: 16.0, targetPBV: 1.0, cyclicality: "Cyclical", cyclicalityScore: 85, cyclicalityDesc: "Siklikal Nikel Global", cyclicalityNote: "Neraca kuat tanpa utang berbunga.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.5, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.25 },
+      "TINS": { ticker: "TINS", name: "PT Timah Tbk", sector: "Pertambangan Timah", price: 4360, eps: 500.0, cfoPerShare: 540.0, bvps: 1416.2, dps: 80.0, growth: 25.0, targetPE: 9.0, targetPBV: 3.1, cyclicality: "Cyclical", cyclicalityScore: 85, cyclicalityDesc: "Siklikal Timah Dunia", cyclicalityNote: "Eksportir timah murni terbesar kedua dunia.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 22.0, nonHalalRatio: 0.6, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.08 },
+      "MDKA": { ticker: "MDKA", name: "PT Merdeka Copper Gold Tbk", sector: "Tambang Emas & Tembaga", price: 2870, eps: 38.1, cfoPerShare: 50.0, bvps: 0.0, dps: 0.0, growth: 15.0, targetPE: 45.0, targetPBV: 2.2, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Emas & Tembaga", cyclicalityNote: "Proyek tembaga raksasa Tujuh Bukit.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 36.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Fase Investasi", cfoToEps: 1.31 },
+      "AMMN": { ticker: "AMMN", name: "PT Amman Mineral Internasional Tbk", sector: "Tambang Tembaga & Emas", price: 4370, eps: -92.6, cfoPerShare: 110.0, bvps: 0.1, dps: 0.0, growth: 20.0, targetPE: 30.0, targetPBV: 4.5, cyclicality: "Cyclical", cyclicalityScore: 75, cyclicalityDesc: "Siklikal Tembaga Dunia", cyclicalityNote: "Smelter tembaga nasional & cadangan emas masif.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 26.0, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.00 },
+      "MBMA": { ticker: "MBMA", name: "PT Merdeka Battery Materials Tbk", sector: "Material Baterai EV & Nikel", price: 460, eps: 12.2, cfoPerShare: 2.6, bvps: 0.0, dps: 0.0, growth: 20.0, targetPE: 30.0, targetPBV: 2.0, cyclicality: "Cyclical", cyclicalityScore: 90, cyclicalityDesc: "Sangat Siklikal Nikel EV", cyclicalityNote: "Smelter HPAL untuk rantai pasok baterai mobil listrik.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 28.0, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Negatif Terkendali", cfoToEps: 0.21 },
+      "BRMS": { ticker: "BRMS", name: "PT Bumi Resources Minerals Tbk", sector: "Tambang Emas", price: 550, eps: 4.7, cfoPerShare: 6.0, bvps: 0.0, dps: 0.0, growth: 22.0, targetPE: 35.0, targetPBV: 2.5, cyclicality: "Cyclical", cyclicalityScore: 70, cyclicalityDesc: "Siklikal Emas Murni", cyclicalityNote: "Pabrik pengolahan emas kedua di Palu.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 8.0, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.28 },
+      "SMGR": { ticker: "SMGR", name: "PT Semen Indonesia Tbk", sector: "Semen & Bahan Bangunan", price: 1615, eps: 56.0, cfoPerShare: 701.0, bvps: 6485.4, dps: 28.3, growth: 7.0, targetPE: 28.8, targetPBV: 0.25, cyclicality: "Cyclical", cyclicalityScore: 70, cyclicalityDesc: "Siklikal Semen Nasional", cyclicalityNote: "PBV sangat rendah (0.25x), kas operasional kuat Rp 701/saham.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 34.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 12.52 },
+      "INTP": { ticker: "INTP", name: "PT Indocement Tunggal Prakarsa Tbk", sector: "Semen (Tiga Roda)", price: 5325, eps: 706.3, cfoPerShare: 850.0, bvps: 6732.8, dps: 300.0, growth: 8.0, targetPE: 8.0, targetPBV: 0.8, cyclicality: "Cyclical", cyclicalityScore: 70, cyclicalityDesc: "Siklikal Semen", cyclicalityNote: "Neraca kuat tanpa utang berbunga signifikan.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 5.0, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.20 },
+      "INKP": { ticker: "INKP", name: "PT Indah Kiat Pulp & Paper Tbk", sector: "Kertas & Pulp", price: 8325, eps: 2041.1, cfoPerShare: 0.1, bvps: 1.3, dps: 75.0, growth: 12.0, targetPE: 4.1, targetPBV: 0.8, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Pulp & Paper", cyclicalityNote: "Ekspor global dengan valuasi P/E rendah.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 38.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.00 },
+      "TKIM": { ticker: "TKIM", name: "PT Pabrik Kertas Tjiwi Kimia Tbk", sector: "Kertas & Kemasan", price: 7225, eps: 2383.6, cfoPerShare: 0.1, bvps: 1.0, dps: 50.0, growth: 10.0, targetPE: 3.5, targetPBV: 0.7, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Kertas Kemasan", cyclicalityNote: "Penerima manfaat tren kemasan ramah lingkungan.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 35.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.00 },
+
+      // 5. TELCO & TEKNOLOGI
+      "TLKM": { ticker: "TLKM", name: "PT Telkom Indonesia Tbk", sector: "Telekomunikasi", price: 2270, eps: 173.1, cfoPerShare: 240.0, bvps: 1200.4, dps: 178.0, growth: 5.0, targetPE: 13.5, targetPBV: 1.9, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Konektivitas Digital", cyclicalityNote: "IndiHome & Telkomsel adalah infrastruktur pokok nasional.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 26.5, nonHalalRatio: 1.4, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Sangat Kuat", cfoToEps: 1.39 },
+      "ISAT": { ticker: "ISAT", name: "PT Indosat Tbk", sector: "Telekomunikasi", price: 2050, eps: 232.0, cfoPerShare: 310.0, bvps: 1148.8, dps: 90.0, growth: 10.0, targetPE: 9.0, targetPBV: 1.8, cyclicality: "Moderate", cyclicalityScore: 35, cyclicalityDesc: "Moderat Jaringan Seluler", cyclicalityNote: "Sinergi merger Ooredoo-Hutchison.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 41.0, nonHalalRatio: 1.8, shariaNote: "Masuk DES OJK. Utang mendekati 41%.", fcfStatus: "Kuat", cfoToEps: 1.34 },
+      "EXCL": { ticker: "EXCL", name: "PT XL Axiata Tbk", sector: "Telekomunikasi", price: 2160, eps: -249.0, cfoPerShare: 280.0, bvps: 1586.6, dps: 45.0, growth: 8.0, targetPE: 15.0, targetPBV: 1.4, cyclicality: "Moderate", cyclicalityScore: 35, cyclicalityDesc: "Moderat Seluler & Fiber", cyclicalityNote: "Fokus konvergensi fixed mobile broadband.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 42.0, nonHalalRatio: 1.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.12 },
+      "TOWR": { ticker: "TOWR", name: "PT Sarana Menara Nusantara Tbk", sector: "Menara Telekomunikasi", price: 458, eps: 68.0, cfoPerShare: 90.0, bvps: 491.1, dps: 30.0, growth: 7.0, targetPE: 7.0, targetPBV: 0.9, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Sewa Menara", cyclicalityNote: "Pendapatan kontrak sewa jangka panjang berulang.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 39.0, nonHalalRatio: 1.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.32 },
+      "MTEL": { ticker: "MTEL", name: "PT Dayamitra Telekomunikasi Tbk", sector: "Menara Telko (Mitratel)", price: 450, eps: 27.0, cfoPerShare: 45.0, bvps: 396.7, dps: 20.0, growth: 7.0, targetPE: 16.0, targetPBV: 1.1, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Menara BUMN", cyclicalityNote: "Pemilik menara terbanyak di Asia Tenggara.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 18.5, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.67 },
+      "GOTO": { ticker: "GOTO", name: "PT GoTo Gojek Tokopedia Tbk", sector: "Teknologi & Ekosistem Digital", price: 28, eps: -0.02, cfoPerShare: 0.5, bvps: 30.4, dps: 0.0, growth: 10.0, targetPE: 25.0, targetPBV: 0.9, cyclicality: "Moderate", cyclicalityScore: 55, cyclicalityDesc: "Ekosistem Digital", cyclicalityNote: "Fokus efisiensi biaya dan EBITDA positif.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 3.5, nonHalalRatio: 1.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Menuju Titik Impas", cfoToEps: 1.00 },
+      "BUKA": { ticker: "BUKA", name: "PT Bukalapak.com Tbk", sector: "Teknologi & Marketplace", price: 102, eps: 18.4, cfoPerShare: 20.0, bvps: 264.6, dps: 0.0, growth: 8.0, targetPE: 6.0, targetPBV: 0.4, cyclicality: "Defensive", cyclicalityScore: 30, cyclicalityDesc: "Platform Digital Kaya Kas", cyclicalityNote: "Kas melimpah, harga jauh di bawah nilai kas/saham.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 0.5, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Kaya Kas", cfoToEps: 1.09 },
+
+      // 6. KESEHATAN & FARMASI
+      "KLBF": { ticker: "KLBF", name: "PT Kalbe Farma Tbk", sector: "Farmasi & Nutrisi", price: 780, eps: 79.4, cfoPerShare: 95.0, bvps: 537.7, dps: 20.0, growth: 7.5, targetPE: 10.0, targetPBV: 1.5, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Sangat Defensif Obat & Nutrisi", cyclicalityNote: "Farmasi bluechip terbesar dengan jaringan distribusi luas.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 6.2, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.20 },
+      "MIKA": { ticker: "MIKA", name: "PT Mitra Keluarga Karyasehat Tbk", sector: "Layanan Rumah Sakit", price: 1750, eps: 101.4, cfoPerShare: 120.0, bvps: 526.0, dps: 40.0, growth: 9.0, targetPE: 17.0, targetPBV: 3.3, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Sangat Defensif Jasa Medis", cyclicalityNote: "RS rujukan tanpa utang berbunga dengan margin tinggi.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 1.5, nonHalalRatio: 0.1, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.18 },
+      "HEAL": { ticker: "HEAL", name: "PT Medikaloka Hermina Tbk", sector: "Layanan Rumah Sakit", price: 595, eps: 25.9, cfoPerShare: 35.0, bvps: 361.7, dps: 10.0, growth: 11.0, targetPE: 23.0, targetPBV: 1.6, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Defensif RS Ibu & Anak", cyclicalityNote: "Jaringan RS Hermina ekspansif melayani BPJS & swasta.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 24.0, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.35 },
+      "SILO": { ticker: "SILO", name: "PT Siloam International Hospitals Tbk", sector: "Layanan Rumah Sakit", price: 1895, eps: 95.2, cfoPerShare: 130.0, bvps: 791.6, dps: 45.0, growth: 12.0, targetPE: 20.0, targetPBV: 2.4, cyclicality: "Defensive", cyclicalityScore: 20, cyclicalityDesc: "Defensif Jasa RS Premium", cyclicalityNote: "Jaringan RS swasta terbesar di bawah Lippo Group.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 15.0, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.37 },
+      "TSPC": { ticker: "TSPC", name: "PT Tempo Scan Pacific Tbk", sector: "Farmasi & Kosmetik", price: 2630, eps: 327.8, cfoPerShare: 360.0, bvps: 2159.2, dps: 150.0, growth: 8.0, targetPE: 8.0, targetPBV: 1.2, cyclicality: "Defensive", cyclicalityScore: 15, cyclicalityDesc: "Defensif Obat Bebas", cyclicalityNote: "Bodrex dan hemaviton sangat kuat di pasar.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 8.0, nonHalalRatio: 0.3, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.10 },
+
+      // 7. PROPERTI
+      "SMRA": { ticker: "SMRA", name: "PT Summarecon Agung Tbk", sector: "Properti & Real Estate", price: 268, eps: 36.1, cfoPerShare: 88.5, bvps: 720.4, dps: 5.0, growth: 6.0, targetPE: 7.4, targetPBV: 0.37, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Properti Kota Mandiri", cyclicalityNote: "Kawasan kota mandiri Kelapa Gading, Serpong, Bandung.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 37.5, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK. PBV 0.37x.", fcfStatus: "Positif", cfoToEps: 2.45 },
+      "BSDE": { ticker: "BSDE", name: "PT Bumi Serpong Damai Tbk", sector: "Properti & Real Estate", price: 555, eps: 89.0, cfoPerShare: 110.0, bvps: 2143.1, dps: 20.0, growth: 7.0, targetPE: 6.2, targetPBV: 0.26, cyclicality: "Cyclical", cyclicalityScore: 75, cyclicalityDesc: "Siklikal Properti BSD City", cyclicalityNote: "Cadangan lahan raksasa dan PBV 0.26x.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 24.0, nonHalalRatio: 0.5, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.24 },
+      "CTRA": { ticker: "CTRA", name: "PT Ciputra Development Tbk", sector: "Properti & Real Estate", price: 585, eps: 136.0, cfoPerShare: 160.0, bvps: 1321.7, dps: 25.0, growth: 8.0, targetPE: 4.3, targetPBV: 0.44, cyclicality: "Cyclical", cyclicalityScore: 75, cyclicalityDesc: "Siklikal Properti Nasional", cyclicalityNote: "Proyek properti di lebih dari 30 kota Indonesia.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 22.0, nonHalalRatio: 0.4, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.18 },
+      "PWON": { ticker: "PWON", name: "PT Pakuwon Jati Tbk", sector: "Properti & Mall Ritel", price: 288, eps: 46.0, cfoPerShare: 65.0, bvps: 474.3, dps: 10.0, growth: 6.0, targetPE: 6.3, targetPBV: 0.61, cyclicality: "Moderate", cyclicalityScore: 55, cyclicalityDesc: "Sewa Mall (Recurring)", cyclicalityNote: "Pendapatan sewa mall Kota Kasablanka dan Gandaria City.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 18.0, nonHalalRatio: 0.4, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.41 },
+      "ASRI": { ticker: "ASRI", name: "PT Alam Sutera Realty Tbk", sector: "Properti", price: 115, eps: 14.5, cfoPerShare: 20.0, bvps: 585.9, dps: 0.0, growth: 5.0, targetPE: 8.0, targetPBV: 0.20, cyclicality: "Cyclical", cyclicalityScore: 85, cyclicalityDesc: "Siklikal Properti", cyclicalityNote: "Pengembangan kawasan Alam Sutera & Suvarna Sutera.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 39.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.38 },
+
+      // 8. INDUSTRI & OTOMOTIF
+      "ASII": { ticker: "ASII", name: "PT Astra International Tbk", sector: "Konglomerasi Otomotif", price: 4820, eps: 740.0, cfoPerShare: 820.0, bvps: 5763.2, dps: 98.0, growth: 6.0, targetPE: 6.5, targetPBV: 0.84, cyclicality: "Moderate", cyclicalityScore: 45, cyclicalityDesc: "Moderat Konglomerasi", cyclicalityNote: "Penguasa pasar mobil/motor dengan dividen konsisten.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 22.5, nonHalalRatio: 2.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Sangat Kuat", cfoToEps: 1.11 },
+      "UNTR": { ticker: "UNTR", name: "PT United Tractors Tbk", sector: "Alat Berat & Tambang", price: 25025, eps: 2114.0, cfoPerShare: 2400.0, bvps: 27647.0, dps: 1500.0, growth: 5.0, targetPE: 11.8, targetPBV: 0.91, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Alat Berat & Emas", cyclicalityNote: "Distributor Komatsu & tambang emas Martabe.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 14.5, nonHalalRatio: 1.2, shariaNote: "Masuk DES OJK & JII.", fcfStatus: "Mesin Kas", cfoToEps: 1.14 },
+      "AUTO": { ticker: "AUTO", name: "PT Astra Otoparts Tbk", sector: "Komponen Otomotif", price: 3380, eps: 501.0, cfoPerShare: 550.0, bvps: 3317.8, dps: 160.0, growth: 8.0, targetPE: 6.7, targetPBV: 1.02, cyclicality: "Moderate", cyclicalityScore: 45, cyclicalityDesc: "Moderat Manufaktur Otomotif", cyclicalityNote: "Suku cadang OEM dan ritel Shop & Drive.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 8.0, nonHalalRatio: 0.4, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat", cfoToEps: 1.10 },
+
+      // 9. RITEL
+      "ACES": { ticker: "ACES", name: "PT Aspirasi Hidup Indonesia Tbk", sector: "Ritel Perlengkapan Rumah", price: 336, eps: 44.6, cfoPerShare: 55.0, bvps: 371.7, dps: 33.0, growth: 10.0, targetPE: 7.5, targetPBV: 0.90, cyclicality: "Moderate", cyclicalityScore: 40, cyclicalityDesc: "Ritel Perlengkapan Rumah", cyclicalityNote: "Peritel perlengkapan rumah tangga tanpa utang berbunga.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 2.8, nonHalalRatio: 0.2, shariaNote: "Masuk DES OJK.", fcfStatus: "Murni Kas", cfoToEps: 1.23 },
+      "MAPI": { ticker: "MAPI", name: "PT Mitra Adiperkasa Tbk", sector: "Ritel Gaya Hidup & Olahraga", price: 1555, eps: 149.0, cfoPerShare: 393.8, bvps: 923.2, dps: 10.0, growth: 19.7, targetPE: 10.4, targetPBV: 1.68, cyclicality: "Moderate", cyclicalityScore: 45, cyclicalityDesc: "Ritel Gaya Hidup", cyclicalityNote: "Sports Station, Zara, Starbucks, Foot Locker.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 18.0, nonHalalRatio: 0.9, shariaNote: "Masuk DES OJK.", fcfStatus: "Kuat (Rp 393/saham)", cfoToEps: 2.64 },
+      "ERAA": { ticker: "ERAA", name: "PT Erajaya Swasembada Tbk", sector: "Ritel Gadget & Smartphone", price: 625, eps: 89.5, cfoPerShare: 110.0, bvps: 606.0, dps: 25.0, growth: 12.0, targetPE: 7.0, targetPBV: 1.03, cyclicality: "Moderate", cyclicalityScore: 50, cyclicalityDesc: "Ritel Gadget iPhone/Android", cyclicalityNote: "Distributor resmi iPhone (iBox) dan smartphone Android.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 32.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.23 },
+
+      // 10. ENERGI HIJAU & KONGLOMERASI
+      "BREN": { ticker: "BREN", name: "PT Barito Renewables Energy Tbk", sector: "Energi Terbarukan (Geothermal)", price: 2340, eps: 19.4, cfoPerShare: 35.0, bvps: 0.0, dps: 5.0, growth: 18.0, targetPE: 120.0, targetPBV: 20.0, cyclicality: "Defensive", cyclicalityScore: 35, cyclicalityDesc: "Defensif Energi Hijau", cyclicalityNote: "Pembangkit listrik panas bumi Star Energy.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 37.0, nonHalalRatio: 0.4, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.80 },
+      "CUAN": { ticker: "CUAN", name: "PT Petrindo Jaya Kreasi Tbk", sector: "Energi & Tambang", price: 670, eps: 21.7, cfoPerShare: 30.0, bvps: 0.0, dps: 0.0, growth: 15.0, targetPE: 30.0, targetPBV: 5.0, cyclicality: "Cyclical", cyclicalityScore: 85, cyclicalityDesc: "Siklikal Energi", cyclicalityNote: "Ekspansi tambang batubara dan mineral.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 28.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.38 },
+      "BRPT": { ticker: "BRPT", name: "PT Barito Pacific Tbk", sector: "Petrokimia & Energi", price: 1445, eps: 25.2, cfoPerShare: 40.0, bvps: 0.0, dps: 1.6, growth: 8.0, targetPE: 57.2, targetPBV: 2.5, cyclicality: "Cyclical", cyclicalityScore: 80, cyclicalityDesc: "Siklikal Petrokimia", cyclicalityNote: "Holding Chandra Asri dan BREN.", isSharia: true, businessHalal: true, businessDesc: "Halal", debtRatio: 38.0, nonHalalRatio: 0.8, shariaNote: "Masuk DES OJK.", fcfStatus: "Positif", cfoToEps: 1.59 }
+    };
+
+    // 1. SINKRONISASI DENGAN 963 DATA RESMI BEI (idx_data.js)
+    if (window.idxOfficialStocks) {
+      for (const [code, item] of Object.entries(window.idxOfficialStocks)) {
+        if (stockDatabase[code]) {
+          stockDatabase[code].price = item.price;
+          stockDatabase[code].prevPrice = item.prev;
+          stockDatabase[code].diff = item.diff;
+          stockDatabase[code].volume = item.volume;
+        }
+      }
+    }
+
+    // 2. AUDIT STATUS SYARIAH 100% SESUAI SK DES OJK (KEP-21/D.04/2026)
+    Object.keys(stockDatabase).forEach(code => {
+      const isDes = window.isOjkSharia ? window.isOjkSharia(code) : false;
+      stockDatabase[code].isSharia = isDes;
+      if (!isDes) {
+        stockDatabase[code].businessHalal = false;
+        stockDatabase[code].shariaNote = "TIDAK MASUK DAFTAR EFEK SYARIAH (DES) OJK SK KEP-21/D.04/2026.";
+        if (!stockDatabase[code].businessDesc.includes("Bank") && !stockDatabase[code].businessDesc.includes("Non-DES")) {
+          stockDatabase[code].businessDesc = "Non-DES (Tidak Lolos Screening Syariah OJK)";
+        }
+      }
+    });
+
+    let currentStock = stockDatabase["BRIS"];
+    const activeMethods = {
+      dcfEps: true,
+      dcfFcf: true,
+      grahamNumber: true,
+      grahamFormula: true,
+      ddm: true,
+      peVal: true,
+      pbvVal: true
+    };
+
+    function formatRupiah(num) {
+      if (isNaN(num) || num === null || !isFinite(num)) return "Rp -";
+      return "Rp " + Math.round(num).toLocaleString("id-ID");
+    }
+
+    function onSearchInput(val) {
+      const query = val.trim().toUpperCase();
+      const list = document.getElementById("autocompleteList");
+      if (!query) {
+        list.classList.add("hidden");
+        return;
+      }
+
+      const officialDb = window.idxOfficialStocks || {};
+      const allCodes = Object.keys(officialDb).length > 0 ? Object.keys(officialDb) : Object.keys(masterAllStocks);
+
+      // Pencarian cerdas: Awalan kode -> Mengandung kode -> Nama perusahaan
+      const prefixCodes = allCodes.filter(c => c.startsWith(query));
+      const containCodes = allCodes.filter(c => !c.startsWith(query) && c.includes(query));
+      const nameCodes = allCodes.filter(c => !c.includes(query) && (
+        (officialDb[c] && officialDb[c].name.toUpperCase().includes(query)) ||
+        (masterAllStocks[c] && masterAllStocks[c].toUpperCase().includes(query))
+      ));
+
+      const mergedCodes = [...prefixCodes, ...containCodes, ...nameCodes].slice(0, 20);
+
+      let html = "";
+      if (mergedCodes.length > 0) {
+        html += mergedCodes.map(code => {
+          const audited = stockDatabase[code];
+          const official = officialDb[code];
+          const name = (official && official.name) || (audited && audited.name) || masterAllStocks[code] || `PT ${code} Tbk`;
+          const price = (official && official.price) || (audited && audited.price) || 0;
+          const diff = (official && official.diff) || (audited && audited.diff) || 0;
+          const prev = (official && official.prev) || (audited && audited.prevPrice) || price;
+          const diffPct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : "0.0";
+          const diffClass = diff > 0 ? "text-emerald-400" : (diff < 0 ? "text-rose-400" : "text-slate-400");
+          const diffSign = diff > 0 ? "+" : "";
+
+          const isBank = code.startsWith("BB") || code.startsWith("BN") || code.startsWith("BD") || name.toUpperCase().includes("BANK");
+          const isSharia = window.isOjkSharia ? window.isOjkSharia(code) : false;
+          const hasManual = !!manualData[code];
+          const hasFundamentals = hasManual || (audited && !audited.fundamentalsMissing);
+          const sector = hasFundamentals
+            ? `${audited ? audited.sector : "Perusahaan Tercatat BEI"}${hasManual ? ' &bull; <span class="text-indigo-300">Data manual</span>' : ""}`
+            : `${isBank ? "Perbankan / Finansial" : "Perusahaan Tercatat BEI"} &bull; <span class="text-amber-400">Belum ada data fundamental</span>`;
+
+          return `
+            <div onclick="selectStock('${code}')" class="p-3 hover:bg-slate-800 cursor-pointer flex items-center justify-between transition border-b border-slate-800/60">
+              <div class="flex items-center gap-3">
+                <span class="font-mono font-bold text-white text-base bg-slate-950 px-2 py-0.5 rounded border border-slate-700">${code}</span>
+                <div>
+                  <div class="text-sm font-semibold text-slate-200">${name}</div>
+                  <div class="text-xs text-slate-400">${sector}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${isSharia ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+                  ${isSharia ? '✓ DES Syariah' : '✗ Non-DES'}
+                </span>
+                <div class="mt-1 flex items-center justify-end gap-1.5 font-mono">
+                  <span class="text-xs font-bold text-white">${formatRupiah(price)}</span>
+                  <span class="text-[10px] ${diffClass}">(${diffSign}${diffPct}%)</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      if (mergedCodes.length === 0 && query.length === 4) {
+        html += `
+          <div onclick="resolveDynamicStock('${query}')" class="p-3.5 bg-indigo-950/50 hover:bg-indigo-900 cursor-pointer flex items-center justify-between transition border-t border-indigo-500/30">
+            <div class="flex items-center gap-2">
+              <span class="text-indigo-400 font-bold text-xs">⚡ Analisis Saham:</span>
+              <span class="font-mono font-bold text-white bg-indigo-600 px-2 py-0.5 rounded text-xs">${query}</span>
+            </div>
+            <span class="text-xs text-indigo-300 font-semibold underline">Buka Analisis Lengkap &rarr;</span>
+          </div>
+        `;
+      }
+
+      list.innerHTML = html;
+      list.classList.remove("hidden");
+    }
+
+    function onSearchKeyDown(e) {
+      if (e.key === "Enter") searchStockNow();
+    }
+
+    function searchStockNow() {
+      const query = document.getElementById("tickerSearch").value.trim().toUpperCase();
+      if (!query) return;
+      selectStock(query);
+    }
+
+    function resolveDynamicStock(ticker) {
+      document.getElementById("autocompleteList").classList.add("hidden");
+      document.getElementById("tickerSearch").value = ticker;
+
+      const official = (window.idxOfficialStocks && window.idxOfficialStocks[ticker]) || null;
+      const compName = (official && official.name) || masterAllStocks[ticker] || `PT ${ticker} Indonesia Tbk`;
+      const realPrice = official && official.price > 0 ? official.price : null;
+      const nameUpper = compName.toUpperCase();
+
+      const isBank = ticker.startsWith("BB") || ticker.startsWith("BN") || ticker.startsWith("BD") || nameUpper.includes("BANK");
+      const isMining = nameUpper.includes("TAMBANG") || nameUpper.includes("MINERAL") || nameUpper.includes("BATUBARA") || nameUpper.includes("ENERGY") || nameUpper.includes("MINING") || nameUpper.includes("COAL") || nameUpper.includes("PETRO") || nameUpper.includes("MINYAK");
+      const isProperty = nameUpper.includes("PROPERTI") || nameUpper.includes("PROPERTY") || nameUpper.includes("REALTY") || nameUpper.includes("LAND") || nameUpper.includes("KAPUK") || nameUpper.includes("AGUNG");
+      const isFood = nameUpper.includes("FOOD") || nameUpper.includes("PANGAN") || nameUpper.includes("AGRI") || nameUpper.includes("KONSUMSI") || nameUpper.includes("ROTI") || nameUpper.includes("BUAH") || nameUpper.includes("ALFA") || nameUpper.includes("RETAIL");
+
+      let sector = "Perusahaan Tercatat BEI (IHSG)";
+      let cyclicality = "Moderate";
+      let cyclicalityScore = 50;
+      let cyclicalityDesc = "Sektor Riil IHSG";
+      let cyclicalityNote = "Dianalisis menggunakan parameter rata-rata industri BEI.";
+      let targetPE = 12.0;
+      let targetPBV = 1.4;
+
+      if (isBank) {
+        sector = "Perbankan / Jasa Keuangan";
+        cyclicality = "Defensive";
+        cyclicalityScore = 35;
+        cyclicalityDesc = "Finansial / Jasa Keuangan";
+        cyclicalityNote = "Sensitif terhadap kebijakan suku bunga BI dan penyaluran kredit.";
+        targetPE = 11.0;
+        targetPBV = 1.3;
+      } else if (isMining) {
+        sector = "Energi & Komoditas Tambang";
+        cyclicality = "Cyclical";
+        cyclicalityScore = 80;
+        cyclicalityDesc = "Sangat Siklikal (Fluktuasi Komoditas Dunia)";
+        cyclicalityNote = "Sangat dipengaruhi pergerakan harga komoditas global. Disiplin beli saat dasar siklus.";
+        targetPE = 8.5;
+        targetPBV = 1.5;
+      } else if (isProperty) {
+        sector = "Properti & Real Estate";
+        cyclicality = "Cyclical";
+        cyclicalityScore = 70;
+        cyclicalityDesc = "Siklikal Suku Bunga & Daya Beli";
+        cyclicalityNote = "Bergantung pada tren suku bunga KPR dan pertumbuhan penjualan properti.";
+        targetPE = 14.0;
+        targetPBV = 1.8;
+      } else if (isFood) {
+        sector = "Consumer Non-Cyclical (Pangan & Ritel)";
+        cyclicality = "Defensive";
+        cyclicalityScore = 20;
+        cyclicalityDesc = "Defensif Kebutuhan Pokok";
+        cyclicalityNote = "Permintaan produk stabil meski terjadi gejolak ekonomi makro.";
+        targetPE = 16.0;
+        targetPBV = 2.5;
+      }
+
+      // KEPATUHAN SYARIAH 100% SESUAI SK DES OJK KEP-21/D.04/2026
+      // Status DES berasal dari daftar resmi OJK; rasio utang & pendapatan non-halal
+      // tidak diketahui tanpa laporan keuangan, jadi dibiarkan kosong (null).
+      const isSharia = window.isOjkSharia ? window.isOjkSharia(ticker) : false;
+      const businessHalal = isSharia;
+      const businessDesc = isSharia 
+        ? "Halal (Sektor Riil Lolos DES OJK)" 
+        : (isBank ? "Non-Halal (Bank Konvensional / Riba)" : "Non-DES (Tidak Lolos Screening Keuangan/Bisnis OJK)");
+      const shariaNote = isSharia 
+        ? "RESMI MASUK DAFTAR EFEK SYARIAH (DES) OJK SK KEP-21/D.04/2026." 
+        : (isBank ? "TIDAK MASUK DES OJK (Kegiatan usaha perbankan konvensional berbasis bunga)." : "TIDAK MASUK DAFTAR EFEK SYARIAH (DES) OJK SK KEP-21/D.04/2026.");
+
+      // Fundamental (EPS, BVPS, DPS, CFO) TIDAK diestimasi dari harga: estimasi seperti itu
+      // membuat nilai wajar = harga sendiri (melingkar). Dibiarkan null sampai ada data asli.
+      const generated = {
+        ticker: ticker,
+        name: compName,
+        sector: sector,
+        price: realPrice,
+        prevPrice: official ? official.prev : null,
+        diff: official ? official.diff : 0,
+        eps: null,
+        cfoPerShare: null,
+        bvps: null,
+        dps: null,
+        growth: null,
+        targetPE: targetPE,
+        targetPBV: targetPBV,
+        cyclicality: cyclicality,
+        cyclicalityScore: cyclicalityScore,
+        cyclicalityDesc: cyclicalityDesc + " (perkiraan dari nama emiten)",
+        cyclicalityNote: cyclicalityNote + " Sektor ditebak dari nama perusahaan, belum diverifikasi.",
+        isSharia: isSharia,
+        businessHalal: businessHalal,
+        businessDesc: businessDesc,
+        debtRatio: null,
+        nonHalalRatio: null,
+        shariaNote: shariaNote,
+        fcfStatus: null,
+        cfoToEps: null,
+        fundamentalsMissing: true
+      };
+
+      stockDatabase[ticker] = generated;
+      currentStock = generated;
+      renderAll();
+    }
+
+    function selectStock(ticker) {
+      if (!stockDatabase[ticker]) {
+        resolveDynamicStock(ticker);
+        return;
+      }
+      if (window.idxOfficialStocks && window.idxOfficialStocks[ticker]) {
+        stockDatabase[ticker].price = window.idxOfficialStocks[ticker].price;
+      }
+      if (window.isOjkSharia) {
+        stockDatabase[ticker].isSharia = window.isOjkSharia(ticker);
+      }
+      currentStock = stockDatabase[ticker];
+      document.getElementById("tickerSearch").value = ticker;
+      document.getElementById("autocompleteList").classList.add("hidden");
+      renderAll();
+    }
+
+    // ==============================================================
+    // DATA FUNDAMENTAL MANUAL (disimpan di localStorage browser)
+    // ==============================================================
+    const MANUAL_STORAGE_KEY = "kalkulatorSaham.manualFundamentals.v1";
+    const MANUAL_FIELDS = ["eps", "bvps", "dps", "cfoPerShare", "capexPerShare", "growth", "debtRatio", "nonHalalRatio", "targetPE", "targetPBV", "cyclicalityScore"];
+    const SNAPSHOT_FIELDS = [...MANUAL_FIELDS, "fundamentalsMissing", "fcfStatus", "cyclicality", "cyclicalityDesc", "cyclicalityNote"];
+
+    function loadManualData() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(MANUAL_STORAGE_KEY) || "{}");
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    let manualData = loadManualData();
+
+    function persistManualData() {
+      try {
+        localStorage.setItem(MANUAL_STORAGE_KEY, JSON.stringify(manualData));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // Menimpa data bawaan dengan data manual. Data bawaan disimpan sekali (_original)
+    // agar bisa dikembalikan ketika data manual dihapus.
+    function applyManualData(s) {
+      if (!s._original) {
+        s._original = {};
+        SNAPSHOT_FIELDS.forEach(f => { s._original[f] = s[f]; });
+      }
+      SNAPSHOT_FIELDS.forEach(f => { s[f] = s._original[f]; });
+
+      const m = manualData[s.ticker];
+      s.manual = m || null;
+      if (!m) return;
+
+      MANUAL_FIELDS.forEach(f => { if (m[f] != null) s[f] = m[f]; });
+      s.fundamentalsMissing = false;
+
+      if (m.cyclicalityScore != null) {
+        const score = m.cyclicalityScore;
+        s.cyclicality = score <= 30 ? "Defensive" : (score <= 60 ? "Moderate" : "Cyclical");
+        s.cyclicalityDesc = (score <= 30 ? "Defensif" : (score <= 60 ? "Moderat" : "Siklikal")) + " (ditetapkan manual)";
+        s.cyclicalityNote = "Kategori siklus ditetapkan sendiri oleh Anda.";
+      }
+
+      if (m.cfoPerShare != null) {
+        if (m.capexPerShare != null) {
+          const fcf = m.cfoPerShare - m.capexPerShare;
+          s.fcfStatus = fcf > 0 ? `Positif (${formatRupiah(fcf)}/saham)` : `Negatif (${formatRupiah(fcf)}/saham)`;
+        } else {
+          s.fcfStatus = "Capex belum diisi";
+        }
+      }
+    }
+
+    function numOrNull(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === "") return null;
+      const n = Number(raw);
+      return isFinite(n) ? n : null;
+    }
+
+    function openManualForm() {
+      const s = currentStock;
+      document.getElementById("mfTicker").textContent = s.ticker;
+      MANUAL_FIELDS.forEach(f => {
+        const el = document.getElementById(`mf_${f}`);
+        if (f === "cyclicalityScore") {
+          el.value = s.manual && s.manual.cyclicalityScore != null ? String(s.manual.cyclicalityScore) : "";
+        } else {
+          el.value = s[f] != null ? s[f] : "";
+        }
+      });
+      document.getElementById("mf_source").value = (s.manual && s.manual.source) || "";
+      document.getElementById("mfError").classList.add("hidden");
+      document.getElementById("mfResetBtn").classList.toggle("hidden", !s.manual);
+      renderSavedList();
+      document.getElementById("manualModal").classList.remove("hidden");
+    }
+
+    function closeManualForm() {
+      document.getElementById("manualModal").classList.add("hidden");
+    }
+
+    function showFormError(msg) {
+      const el = document.getElementById("mfError");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+
+    function saveManualForm() {
+      const s = currentStock;
+      const entry = {};
+      MANUAL_FIELDS.forEach(f => { entry[f] = numOrNull(`mf_${f}`); });
+
+      if (entry.eps == null) return showFormError("EPS wajib diisi (boleh negatif jika emiten rugi).");
+      if (entry.debtRatio != null && (entry.debtRatio < 0 || entry.debtRatio > 100)) return showFormError("Rasio utang harus di antara 0 dan 100%.");
+      if (entry.nonHalalRatio != null && (entry.nonHalalRatio < 0 || entry.nonHalalRatio > 100)) return showFormError("Rasio non-halal harus di antara 0 dan 100%.");
+      if (entry.growth != null && entry.growth >= 11) return showFormError("Pertumbuhan harus di bawah 11% (tingkat diskonto model DCF). Pertumbuhan jangka panjang di atas itu tidak realistis untuk model ini.");
+
+      entry.source = document.getElementById("mf_source").value.trim().slice(0, 120);
+      entry.updatedAt = new Date().toISOString();
+      manualData[s.ticker] = entry;
+      if (!persistManualData()) return showFormError("Gagal menyimpan: penyimpanan browser tidak tersedia (mode privat?).");
+
+      closeManualForm();
+      renderAll();
+    }
+
+    function resetManualData() {
+      const s = currentStock;
+      delete manualData[s.ticker];
+      persistManualData();
+      closeManualForm();
+      renderAll();
+    }
+
+    function renderSavedList() {
+      const box = document.getElementById("mfSavedList");
+      const codes = Object.keys(manualData).sort();
+      box.innerHTML = codes.length === 0
+        ? "Belum ada."
+        : codes.map(c => `<button onclick="closeManualForm(); selectStock('${escapeHtml(c)}')" class="px-2 py-0.5 rounded bg-indigo-950/60 hover:bg-indigo-900 text-indigo-200 border border-indigo-700/50 font-mono">${escapeHtml(c)}</button>`).join("");
+    }
+
+    function exportManualData() {
+      const blob = new Blob([JSON.stringify(manualData, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `data-fundamental-manual-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importManualData(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          let count = 0;
+          for (const [code, entry] of Object.entries(parsed)) {
+            if (!/^[A-Z0-9]{2,6}$/.test(code) || !entry || typeof entry !== "object" || typeof entry.eps !== "number") continue;
+            const clean = {};
+            MANUAL_FIELDS.forEach(f => { clean[f] = typeof entry[f] === "number" && isFinite(entry[f]) ? entry[f] : null; });
+            clean.source = typeof entry.source === "string" ? entry.source.slice(0, 120) : "";
+            clean.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : new Date().toISOString();
+            manualData[code] = clean;
+            count++;
+          }
+          persistManualData();
+          renderSavedList();
+          renderAll();
+          alert(`${count} data saham berhasil diimpor.`);
+        } catch (e) {
+          alert("File tidak valid: bukan JSON cadangan dari aplikasi ini.");
+        }
+        input.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    function updateHelper() {
+      const total = numOrNull("helperTotal");
+      const shares = numOrNull("helperShares");
+      // Rp miliar / juta lembar = Rp 1.000 per lembar
+      document.getElementById("helperResult").textContent =
+        (total != null && shares > 0) ? `Rp ${(total * 1000 / shares).toLocaleString("id-ID", { maximumFractionDigits: 2 })}` : "-";
+    }
+
+    // Memeriksa kewajaran data fundamental dan menandai field yang tidak layak dipakai.
+    // Rasio CFO/EPS selalu dihitung ulang dari data, bukan diketik manual.
+    function auditStockData(s) {
+      const issues = [];
+      if (s.fundamentalsMissing) {
+        s.bvpsValid = false;
+        s.cfoValid = false;
+        s.cfoToEps = null;
+        return issues;
+      }
+
+      // PBV > 100x hampir pasti salah satuan (mis. BVPS tercatat dalam USD) atau gagal diambil
+      s.bvpsValid = s.bvps > 0 && s.price > 0 && (s.price / s.bvps) <= 100;
+      if (!s.bvpsValid && s.bvps != null) {
+        issues.push(`BVPS tercatat Rp ${s.bvps} (PBV ${s.bvps > 0 && s.price > 0 ? Math.round(s.price / s.bvps).toLocaleString("id-ID") + "x" : "tak terhingga"}), kemungkinan salah satuan atau gagal diambil. Graham Number dan PBV Target dinonaktifkan.`);
+      }
+
+      // CFO kurang dari 5% laba bersih biasanya tanda angka salah input, bukan kondisi riil
+      s.cfoValid = s.cfoPerShare != null && s.cfoPerShare > 0 && !(s.eps > 0 && s.cfoPerShare / s.eps < 0.05);
+      if (!s.cfoValid && s.cfoPerShare != null && s.cfoPerShare > 0) {
+        issues.push(`Kas operasi/saham tercatat Rp ${s.cfoPerShare}, tidak wajar dibanding EPS Rp ${s.eps}. DCF Arus Kas dan analisis kualitas laba dinonaktifkan.`);
+      }
+
+      s.cfoToEps = (s.cfoValid && s.eps > 0) ? s.cfoPerShare / s.eps : null;
+      return issues;
+    }
+
+    function renderDataQualityBanner(s, issues) {
+      const banner = document.getElementById("dataQualityBanner");
+      if (s.fundamentalsMissing) {
+        banner.className = "p-3.5 rounded-xl text-xs leading-relaxed bg-amber-950/40 border border-amber-500/40 text-amber-200";
+        banner.innerHTML = `<b class="text-amber-300">&#9888; Data fundamental ${s.ticker} belum tersedia.</b> Aplikasi ini baru memiliki laporan keuangan untuk ${Object.values(stockDatabase).filter(x => !x.fundamentalsMissing).length} emiten. Untuk saham ini hanya harga BEI dan status DES OJK yang berasal dari data resmi; nilai wajar, skenario harga, dan rekomendasi tidak dihitung agar tidak menyesatkan.`;
+        banner.innerHTML += ` <button onclick="openManualForm()" class="ml-1 underline font-semibold text-amber-100 hover:text-white">Isi data dari laporan keuangan &rarr;</button>`;
+      } else if (s.manual) {
+        const when = s.manual.updatedAt ? new Date(s.manual.updatedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-";
+        banner.className = "p-3.5 rounded-xl text-xs leading-relaxed bg-indigo-950/40 border border-indigo-500/40 text-indigo-200";
+        banner.innerHTML = `<b class="text-indigo-300">&#9998; Memakai data fundamental yang Anda isi sendiri</b> (${s.manual.source ? escapeHtml(s.manual.source) + ", " : ""}disimpan ${when}). Field yang dikosongkan memakai data bawaan aplikasi.`
+          + (issues.length > 0 ? `<ul class="list-disc pl-5 mt-1 space-y-0.5 text-amber-200">${issues.map(i => `<li>${i}</li>`).join("")}</ul>` : "");
+      } else if (issues.length > 0) {
+        banner.className = "p-3.5 rounded-xl text-xs leading-relaxed bg-amber-950/30 border border-amber-500/30 text-amber-200";
+        banner.innerHTML = `<b class="text-amber-300">&#9888; Sebagian data ${s.ticker} diragukan:</b><ul class="list-disc pl-5 mt-1 space-y-0.5">${issues.map(i => `<li>${i}</li>`).join("")}</ul>`
+          + `<button onclick="openManualForm()" class="mt-1.5 underline font-semibold text-amber-100 hover:text-white">Koreksi data ini &rarr;</button>`;
+      } else {
+        banner.className = "hidden";
+        banner.innerHTML = "";
+      }
+    }
+
+    function renderAll() {
+      const s = currentStock;
+      applyManualData(s);
+      const issues = auditStockData(s);
+      renderDataQualityBanner(s, issues);
+
+      document.getElementById("cardTickerHeader").textContent = s.ticker;
+      if (document.getElementById("cardCompanyNameHeader")) {
+        document.getElementById("cardCompanyNameHeader").textContent = s.name;
+      }
+      document.getElementById("headerCurrentPrice").textContent = formatRupiah(s.price);
+
+      const diffBadge = document.getElementById("headerDiffBadge");
+      if (diffBadge) {
+        const diff = s.diff || 0;
+        const prev = s.prevPrice || s.prev || (s.price - diff);
+        const diffPct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : "0.0";
+        if (diff > 0) {
+          diffBadge.textContent = `+${diffPct}% (▲ Rp ${diff})`;
+          diffBadge.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        } else if (diff < 0) {
+          diffBadge.textContent = `${diffPct}% (▼ Rp ${Math.abs(diff)})`;
+          diffBadge.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        } else {
+          diffBadge.textContent = `0.0% (Tetap)`;
+          diffBadge.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700";
+        }
+      }
+      document.getElementById("stockSectorBadge").textContent = s.sector;
+
+      if (s.fundamentalsMissing) {
+        ["statEPS", "statBVPS", "statDPS", "statGrowth", "statPE", "statPBV"].forEach(id => {
+          document.getElementById(id).textContent = "Belum ada data";
+        });
+      } else {
+        document.getElementById("statEPS").textContent = formatRupiah(s.eps);
+        document.getElementById("statBVPS").textContent = s.bvpsValid ? formatRupiah(s.bvps) : (s.bvps == null ? "Belum ada data" : "Data diragukan");
+        const yieldPct = s.price > 0 ? ((s.dps / s.price) * 100).toFixed(1) + "%" : "0%";
+        document.getElementById("statDPS").textContent = s.dps != null ? `${formatRupiah(s.dps)} (${yieldPct})` : "Belum ada data";
+        document.getElementById("statGrowth").textContent = s.growth != null ? `${s.growth.toFixed(1)}% / thn` : "Belum ada data";
+        document.getElementById("statPE").textContent = s.eps > 0 ? (s.price / s.eps).toFixed(1) + "x" : "- (laba negatif)";
+        document.getElementById("statPBV").textContent = s.bvpsValid ? (s.price / s.bvps).toFixed(2) + "x" : "-";
+      }
+
+      renderCashFlow(s);
+      renderCyclicality(s);
+      renderEWS(s);
+      calculateValuationsAndScenarios(s);
+    }
+
+    function renderCashFlow(s) {
+      const badge = document.getElementById("cashQualityBadge");
+      const noteBox = document.getElementById("cashFlowNoteBox");
+      const neutralBadge = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700";
+
+      if (s.fundamentalsMissing) {
+        ["cfStatEPS", "cfStatCFO", "cfStatRatio", "cfStatFCF"].forEach(id => {
+          document.getElementById(id).textContent = "-";
+        });
+        badge.textContent = "DATA BELUM TERSEDIA";
+        badge.className = neutralBadge;
+        noteBox.innerHTML = `Kualitas laba tidak bisa dinilai tanpa laporan laba rugi dan arus kas emiten.`;
+        return;
+      }
+
+      document.getElementById("cfStatEPS").textContent = formatRupiah(s.eps);
+      document.getElementById("cfStatCFO").textContent = s.cfoValid ? formatRupiah(s.cfoPerShare) : "Data diragukan";
+      document.getElementById("cfStatRatio").textContent = s.cfoToEps != null ? s.cfoToEps.toFixed(2) + "x" : "-";
+      document.getElementById("cfStatFCF").textContent = s.cfoValid ? s.fcfStatus : "-";
+
+      if (s.cfoPerShare == null) {
+        document.getElementById("cfStatCFO").textContent = "Belum ada data";
+        badge.textContent = "DATA KAS BELUM ADA";
+        badge.className = neutralBadge;
+        noteBox.innerHTML = `Kas operasi per saham belum diisi, sehingga kualitas laba belum bisa dinilai.`;
+        return;
+      }
+      if (!s.cfoValid) {
+        const negative = s.cfoPerShare <= 0;
+        badge.textContent = negative ? "KAS OPERASI NEGATIF" : "DATA KAS DIRAGUKAN";
+        badge.className = negative
+          ? "text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40"
+          : neutralBadge;
+        if (negative) document.getElementById("cfStatCFO").textContent = formatRupiah(s.cfoPerShare);
+        noteBox.innerHTML = negative
+          ? `<span class="text-rose-400 font-bold mr-1">&#9888;</span> <b>Kas operasi negatif:</b> operasional emiten justru menghabiskan kas. Laba akuntansi tidak didukung uang tunai nyata.`
+          : `Angka kas operasional untuk emiten ini tidak wajar sehingga kualitas laba tidak dinilai.`;
+        return;
+      }
+      if (s.cfoToEps == null) {
+        badge.textContent = "LABA NEGATIF";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        noteBox.innerHTML = `Emiten mencatat rugi bersih (EPS ${formatRupiah(s.eps)}), sehingga rasio kas terhadap laba tidak bermakna. Kas operasional tercatat ${formatRupiah(s.cfoPerShare)}/saham.`;
+        return;
+      }
+
+      if (s.cfoToEps >= 1.0) {
+        badge.textContent = "KAS OPERASI PRIMA (>1.0x)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        noteBox.innerHTML = `<span class="text-emerald-400 font-bold mr-1">&#10003;</span> <b>Kualitas Laba Sangat Tinggi:</b> Setiap Rp 1 laba bersih menghasilkan <b>Rp ${s.cfoToEps.toFixed(2)} uang kas nyata</b>. Bebas dari manipulasi piutang dan dividen terbukti dibayar dari kas riil.`;
+      } else if (s.cfoToEps >= 0.7) {
+        badge.textContent = "KAS SEHAT (0.7x - 1.0x)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40";
+        noteBox.innerHTML = `<span class="text-teal-400 font-bold mr-1">&#9878;</span> <b>Arus Kas Sehat:</b> Arus kas operasional berjalan stabil dan sejalan dengan siklus modal kerja normal perusahaan.`;
+      } else {
+        badge.textContent = "WASPADA KAS MACET (<0.7x)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        noteBox.innerHTML = `<span class="text-amber-400 font-bold mr-1">&#9888;</span> <b>Perhatikan Arus Kas:</b> Kas operasional lebih rendah dari laba akuntansi (${s.cfoToEps.toFixed(2)}x). Kemungkinan uang kas sedang tertahan di piutang atau belanja modal pabrik besar.`;
+      }
+    }
+
+    function renderCyclicality(s) {
+      document.getElementById("cyclicalityBadge").textContent = s.cyclicality.toUpperCase();
+      document.getElementById("cyclicalityType").textContent = s.cyclicalityDesc;
+      document.getElementById("cyclicalityBar").style.width = `${s.cyclicalityScore}%`;
+      
+      const bar = document.getElementById("cyclicalityBar");
+      const badge = document.getElementById("cyclicalityBadge");
+      const advice = document.getElementById("cyclicalityAdviceBox");
+
+      if (s.cyclicalityScore <= 30) {
+        bar.className = "bg-emerald-500 h-2 rounded-full transition-all duration-500";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        advice.innerHTML = `<b>Kaidah Defensif:</b> ${s.cyclicalityNote} Saham ini cocok sebagai <b>fondasi portofolio keluarga</b> dengan risiko penurunan laba yang minimal saat resesi.`;
+      } else if (s.cyclicalityScore <= 60) {
+        bar.className = "bg-indigo-500 h-2 rounded-full transition-all duration-500";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40";
+        advice.innerHTML = `<b>Kaidah Moderat:</b> ${s.cyclicalityNote}`;
+      } else {
+        bar.className = "bg-amber-500 h-2 rounded-full transition-all duration-500";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        advice.innerHTML = `<b>Kaidah Siklikal:</b> ${s.cyclicalityNote} <i>Peringatan penting:</i> Jangan terkecoh P/E yang tampak murah di puncak siklus laba. Beli saat valuasi tertekan di dasar siklus!`;
+      }
+    }
+
+    function renderEWS(s) {
+      const debtVal = document.getElementById("ewsDebtRatioVal");
+      const debtBar = document.getElementById("ewsDebtBar");
+      const badge = document.getElementById("shariaRiskBadge");
+      const alertBox = document.getElementById("ewsAlertBox");
+      const cleanseText = document.getElementById("dividendCleansingText");
+
+      const debtKnown = s.debtRatio != null;
+      debtVal.textContent = debtKnown ? `${s.debtRatio.toFixed(1)}% (Batas Maks. 45%)` : "Belum ada data";
+      const width = debtKnown ? Math.min(100, (s.debtRatio / 45) * 100) : 0;
+      debtBar.style.width = `${width}%`;
+
+      if (!s.isSharia) {
+        badge.textContent = "NON-SYARIAH (NON-DES)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40";
+        debtBar.className = "bg-rose-600 h-2.5 rounded-full";
+        alertBox.className = "p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 leading-relaxed";
+        alertBox.innerHTML = `❌ <b>Tidak Masuk DES OJK:</b> Saham <b>${s.ticker}</b> tidak tercantum dalam <b>Daftar Efek Syariah (DES) OJK SK KEP-21/D.04/2026</b>. Tidak memenuhi kriteria syariah (model bisnis/anak usaha ribawi atau rasio utang/keuangan tidak memenuhi syarat OJK).`;
+        cleanseText.innerHTML = `Saham ini berstatus non-syariah resmi menurut Otoritas Jasa Keuangan (OJK).`;
+        return;
+      }
+
+      if (!debtKnown) {
+        badge.textContent = "MASUK DES OJK";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        alertBox.className = "p-3 rounded-xl bg-slate-950/80 border border-slate-700 text-slate-300 leading-relaxed";
+        alertBox.innerHTML = `✅ <b>Resmi Masuk DES OJK (SK KEP-21/D.04/2026).</b> Rasio utang berbunga belum tersedia, jadi jarak ke batas 45% (risiko terdepak dari DES) belum bisa dipantau.`;
+        cleanseText.innerHTML = `Porsi pendapatan non-halal belum tersedia, sehingga besaran pembersihan dividen belum bisa dihitung.`;
+        return;
+      }
+
+      if (s.debtRatio < 25) {
+        badge.textContent = "DES: ZONA AMAN (< 25%)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        debtBar.className = "bg-emerald-500 h-2.5 rounded-full transition-all duration-500";
+        alertBox.className = "p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 leading-relaxed";
+        alertBox.innerHTML = `✅ <b>Resmi Masuk DES OJK (SK KEP-21/D.04/2026):</b> Struktur utang berbunga hanya ${s.debtRatio.toFixed(1)}%, sangat jauh dari batas merah 45% OJK. Status syariah sangat kokoh.`;
+      } else if (s.debtRatio < 38) {
+        badge.textContent = "ZONA WASPADA (25% - 38%)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40";
+        debtBar.className = "bg-teal-500 h-2.5 rounded-full transition-all duration-500";
+        alertBox.className = "p-3 rounded-xl bg-teal-950/30 border border-teal-500/30 text-teal-200 leading-relaxed";
+        alertBox.innerHTML = `<span class="text-teal-400 font-bold mr-1">&#9878;</span> <b>Status Syariah Terjaga:</b> Rasio utang ${s.debtRatio.toFixed(1)}% masih memenuhi syarat OJK, namun perlu dipantau tiap semester saat emiten menerbitkan pinjaman baru.`;
+      } else {
+        badge.textContent = "EARLY WARNING (38% - 45%)";
+        badge.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        debtBar.className = "bg-amber-500 h-2.5 rounded-full transition-all duration-500";
+        alertBox.className = "p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 leading-relaxed";
+        alertBox.innerHTML = `<span class="text-amber-400 font-bold mr-1">&#9888;</span> <b>PERINGATAN DINI (EARLY WARNING):</b> Utang berbunga sudah mencapai ${s.debtRatio.toFixed(1)}%! Jika aset menyusut, saham ini <b>berisiko terdepak dari Daftar Efek Syariah (DES)</b> pada evaluasi OJK berikutnya.`;
+      }
+
+      if (s.nonHalalRatio == null) {
+        cleanseText.innerHTML = `Porsi pendapatan non-halal belum tersedia, sehingga besaran pembersihan dividen belum bisa dihitung.`;
+      } else if (s.nonHalalRatio > 0 && !(s.dps > 0)) {
+        cleanseText.innerHTML = `Pendapatan non-halal tercatat <b>${s.nonHalalRatio.toFixed(1)}%</b>. Belum ada data dividen, jadi nominal pembersihan per lembar belum bisa dihitung.`;
+      } else if (s.nonHalalRatio > 0) {
+        const estDividendCleansing = (s.dps * (s.nonHalalRatio / 100));
+        cleanseText.innerHTML = `Pendapatan non-halal tercatat <b>${s.nonHalalRatio.toFixed(1)}%</b>. Sesuai fikih pasar modal syariah, jika Anda menerima dividen Rp ${s.dps}/lembar, disarankan menyisihkan <b>Rp ${estDividendCleansing.toFixed(2)}/lembar</b> untuk disalurkan ke fasilitas sosial sebagai pensucian harta (*cleansing*).`;
+      } else {
+        cleanseText.innerHTML = `Pendapatan non-halal 0.0%. Tidak ada kewajiban pembersihan dividen, 100% hasil dividen halal bersih.`;
+      }
+    }
+
+    function calculateValuationsAndScenarios(s) {
+      const price = s.price;
+      const g = Math.max(0.01, (s.growth || 0) / 100);
+      const r = 0.11;
+      const bondYield = 6.7;
+
+      let dcfEps = 0;
+      if (s.eps > 0) {
+        let pv = 0; let p = s.eps;
+        for (let t = 1; t <= 5; t++) { p *= (1 + g); pv += p / Math.pow(1 + r, t); }
+        const tv = (p * 1.03) / (r - 0.03);
+        dcfEps = pv + (tv / Math.pow(1 + r, 5));
+      }
+
+      let dcfFcf = 0;
+      // Tanpa kas operasi yang valid, DCF arus kas tidak dihitung (tidak memakai tebakan dari EPS)
+      // Jika capex diisi, pakai FCF sebenarnya (CFO - Capex); jika tidak, pakai CFO
+      const fcfBase = !s.cfoValid ? 0 : (s.capexPerShare != null ? s.cfoPerShare - s.capexPerShare : s.cfoPerShare);
+      if (fcfBase > 0) {
+        let pv = 0; let p = fcfBase;
+        for (let t = 1; t <= 5; t++) { p *= (1 + g); pv += p / Math.pow(1 + r, t); }
+        const tv = (p * 1.03) / (r - 0.03);
+        dcfFcf = pv + (tv / Math.pow(1 + r, 5));
+      }
+
+      let grahamNum = (s.eps > 0 && s.bvpsValid) ? Math.sqrt(22.5 * s.eps * s.bvps) : 0;
+      let grahamFormula = s.eps > 0 ? (s.eps * (8.5 + 2 * Math.min(15, s.growth)) * 4.4) / bondYield : 0;
+
+      let ddmVal = 0;
+      if (s.dps > 0) {
+        const ddmG = Math.min(g, 0.05);
+        if (r > ddmG) ddmVal = (s.dps * (1 + ddmG)) / (r - ddmG);
+      }
+
+      let peVal = s.eps > 0 ? s.eps * s.targetPE : 0;
+      let pbvVal = s.bvpsValid ? s.bvps * s.targetPBV : 0;
+
+      const methods = [
+        { id: "dcfEps", name: "DCF Berbasis Laba (EPS 5-Thn)", value: dcfEps },
+        { id: "dcfFcf", name: "DCF Berbasis Arus Kas Riil (FCF)", value: dcfFcf },
+        { id: "grahamNumber", name: "Graham Number (Aset & Laba)", value: grahamNum },
+        { id: "grahamFormula", name: "Formula Graham (Yield SBN 10Y)", value: grahamFormula },
+        { id: "ddm", name: "Dividend Discount Model (Gordon)", value: ddmVal },
+        { id: "peVal", name: `P/E Target Historis (${s.targetPE}x)`, value: peVal },
+        { id: "pbvVal", name: `PBV Target Historis (${s.targetPBV}x)`, value: pbvVal }
+      ];
+
+      const tbody = document.getElementById("methodsTableBody");
+      tbody.innerHTML = "";
+
+      let sumFair = 0;
+      let countFair = 0;
+
+      methods.forEach(m => {
+        const isChecked = activeMethods[m.id];
+        const isValid = m.value > 0;
+        let mos = 0;
+        let mosText = "-";
+        let badge = `<span class="text-slate-500">-</span>`;
+
+        if (isValid && price > 0) {
+          mos = ((m.value - price) / m.value) * 100;
+          mosText = (mos >= 0 ? "+" : "") + mos.toFixed(1) + "%";
+
+          if (mos >= 20) {
+            badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Diskon</span>`;
+          } else if (mos >= 0) {
+            badge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-teal-500/20 text-teal-300">Wajar</span>`;
+          } else {
+            badge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-rose-500/20 text-rose-300">Kemahalan</span>`;
+          }
+
+          if (isChecked) {
+            sumFair += m.value;
+            countFair++;
+          }
+        }
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/40 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-2">
+            <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleMethod('${m.id}')" class="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-700 focus:ring-0">
+          </td>
+          <td class="py-2.5 px-2 font-sans font-medium text-slate-200">
+            ${m.name}
+            ${!isValid ? `<span class="text-[9px] text-amber-400 block font-normal">*${s.fundamentalsMissing ? "Belum ada data fundamental" : "Data tidak mencukupi / diragukan"}</span>` : ""}
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold ${isValid ? 'text-white' : 'text-slate-500'}">
+            ${formatRupiah(m.value)}
+          </td>
+          <td class="py-2.5 px-3 text-right font-semibold ${mos >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${mosText}
+          </td>
+          <td class="py-2.5 px-2 text-center">${badge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const consensus = countFair > 0 ? (sumFair / countFair) : 0;
+      const mosConsensus = consensus > 0 ? ((consensus - price) / consensus) * 100 : 0;
+
+      const actionBadge = document.getElementById("recommendationActionBadge");
+      const subtext = document.getElementById("recommendationSubtext");
+      const entryText = document.getElementById("entryPlanText");
+      const synthesis = document.getElementById("synthesisText");
+
+      // Tanpa nilai wajar yang sah, jangan tampilkan target harga maupun rekomendasi
+      if (consensus <= 0 || !(price > 0)) {
+        document.getElementById("headerConsensusFair").textContent = "Konsensus Wajar: belum bisa dihitung";
+        ["bear", "base", "bull"].forEach(k => {
+          document.getElementById(`${k}PriceTarget`).textContent = "Rp -";
+          document.getElementById(`${k}ReturnPct`).textContent = "-";
+          document.getElementById(`${k}ReturnPct`).className = "text-xs font-mono font-bold text-slate-500";
+        });
+        if (!s.isSharia) {
+          actionBadge.textContent = "NON-SYARIAH (NON-DES)";
+          actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40";
+          subtext.textContent = "Emiten tidak tercantum dalam Daftar Efek Syariah OJK. Valuasi juga belum bisa dihitung.";
+        } else {
+          actionBadge.textContent = "BELUM BISA DINILAI";
+          actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-slate-800 text-slate-300 border border-slate-600";
+          subtext.textContent = s.fundamentalsMissing
+            ? "Data laporan keuangan emiten ini belum ada di aplikasi, sehingga nilai wajar tidak dihitung."
+            : "Tidak ada metode valuasi aktif yang memiliki data cukup.";
+        }
+        entryText.textContent = "Tidak ada rencana masuk: nilai wajar belum diketahui.";
+        synthesis.innerHTML = `Saham <b>${s.ticker}</b> belum dapat dianalisis secara fundamental. Periksa laporan keuangan terbaru emiten (EPS, nilai buku, dividen, arus kas operasi, dan rasio utang) sebelum mengambil keputusan.`;
+        return;
+      }
+
+      document.getElementById("headerConsensusFair").textContent = `Konsensus Wajar: ${formatRupiah(consensus)} (MoS ${mosConsensus >= 0 ? '+' : ''}${mosConsensus.toFixed(1)}%)`;
+
+      const isCyclical = s.cyclicalityScore >= 60;
+      const bearMultiplier = isCyclical ? 0.70 : 0.82;
+      const bullMultiplier = isCyclical ? 1.45 : 1.25;
+
+      const bearTarget = consensus * bearMultiplier;
+      const baseTarget = consensus;
+      const bullTarget = consensus * bullMultiplier;
+
+      const bearReturn = ((bearTarget - price) / price) * 100;
+      const baseReturn = ((baseTarget - price) / price) * 100;
+      const bullReturn = ((bullTarget - price) / price) * 100;
+
+      document.getElementById("bearPriceTarget").textContent = formatRupiah(bearTarget);
+      document.getElementById("bearReturnPct").textContent = `${bearReturn >= 0 ? '+' : ''}${bearReturn.toFixed(1)}%`;
+      document.getElementById("bearReturnPct").className = bearReturn >= 0 ? "text-xs font-mono font-bold text-emerald-400" : "text-xs font-mono font-bold text-rose-400";
+
+      document.getElementById("basePriceTarget").textContent = formatRupiah(baseTarget);
+      document.getElementById("baseReturnPct").textContent = `${baseReturn >= 0 ? '+' : ''}${baseReturn.toFixed(1)}%`;
+      document.getElementById("baseReturnPct").className = baseReturn >= 0 ? "text-xs font-mono font-bold text-emerald-400" : "text-xs font-mono font-bold text-rose-400";
+
+      document.getElementById("bullPriceTarget").textContent = formatRupiah(bullTarget);
+      document.getElementById("bullReturnPct").textContent = `${bullReturn >= 0 ? '+' : ''}${bullReturn.toFixed(1)}%`;
+      document.getElementById("bullReturnPct").className = bullReturn >= 0 ? "text-xs font-mono font-bold text-indigo-300" : "text-xs font-mono font-bold text-rose-400";
+
+      if (!s.isSharia) {
+        actionBadge.textContent = "HINDARI / NON-SYARIAH";
+        actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40";
+        subtext.textContent = "Emiten tidak memenuhi syarat portofolio syariah berdasarkan regulasi OJK & Fatwa DSN-MUI.";
+        entryText.textContent = "Tidak direkomendasikan untuk portofolio syariah.";
+        synthesis.innerHTML = `Saham <b>${s.ticker}</b> berstatus non-syariah. Secara fundamental keuangan memiliki kinerja tersendiri, namun tidak memenuhi kriteria screening syariah.`;
+      } else if (price < bearTarget) {
+        actionBadge.textContent = "STRONG BUY (DISKON EKSTREM)";
+        actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400 animate-pulse";
+        subtext.textContent = `Harga saat ini (${formatRupiah(price)}) bahkan berada DI BAWAH skenario pesimis terburuk (${formatRupiah(bearTarget)}). Sangat langka!`;
+        entryText.innerHTML = `<b>Strategi Masuk:</b> Alokasikan 50% modal di harga sekarang (${formatRupiah(price)}), dan siapkan 50% sisanya jika pasar masih irasional dalam beberapa pekan ke depan.`;
+        synthesis.innerHTML = `Saham <b>${s.ticker}</b> menawarkan <i>Margin of Safety</i> sangat tebal (+${mosConsensus.toFixed(1)}%). Pasar sedang memberikan diskon besar-besaran yang jarang terjadi pada perusahaan dengan arus kas operasional ${s.fcfStatus}.`;
+      } else if (mosConsensus >= 20) {
+        actionBadge.textContent = "CICIL BELI 3 TAHAP (DCA)";
+        actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        subtext.textContent = `Margin of Safety lebar (+${mosConsensus.toFixed(1)}%). Saham berada di zona undervalue yang aman untuk akumulasi bertahap.`;
+        const step1 = price;
+        const step2 = Math.round(price * 0.94);
+        const step3 = Math.round(bearTarget);
+        entryText.innerHTML = `<b>Strategi Cicil 3 Tahap:</b> Masuk 30% modal di ${formatRupiah(step1)} &bull; Pasang jaring 30% di ${formatRupiah(step2)} (-6%) &bull; Pasang jaring 40% di level Bear ${formatRupiah(step3)}.`;
+        synthesis.innerHTML = `Saham <b>${s.ticker}</b> memiliki profil <b>${s.cyclicalityDesc}</b> dengan rasio utang ${s.debtRatio.toFixed(1)}% (Aman). Skenario normal memberikan potensi keuntungan +${baseReturn.toFixed(1)}%, sementara risiko penurunan tertahan di skenario bear (${formatRupiah(bearTarget)}).`;
+      } else if (mosConsensus >= 0) {
+        actionBadge.textContent = "HOLD / CICIL SANTAI";
+        actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40";
+        subtext.textContent = `Harga pasar saat ini berada di area wajar (${formatRupiah(consensus)}). Tidak murah, tetapi juga belum mahal.`;
+        entryText.innerHTML = `<b>Strategi:</b> Tahan posisi yang sudah ada (*Hold*). Jika ingin menambah, lakukan pembelian santai porsi kecil (10-20% alokasi) atau tunggu momentum koreksi pasar.`;
+        synthesis.innerHTML = `Harga saham berada di kisaran nilai intrinsik wajarnya. Cocok bagi investor yang mengincar pendapatan dividen rutin sambil menunggu pertumbuhan laba kuartal berikutnya.`;
+      } else {
+        actionBadge.textContent = "HOLD / AMANKAN PROFIT";
+        actionBadge.className = "px-3.5 py-1 text-sm font-extrabold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40";
+        subtext.textContent = `Harga pasar saat ini sudah di atas konsensus nilai wajarnya (${mosConsensus.toFixed(1)}% kemahalan).`;
+        entryText.innerHTML = `<b>Strategi:</b> Jangan mengejar harga beli baru. Tahan posisi yang ada atau pertimbangkan realisasi keuntungan bertahap (*Take Profit*) jika mendekati skenario Bull (${formatRupiah(bullTarget)}).`;
+        synthesis.innerHTML = `Harga sudah merefleksikan seluruh kabar baik. Potensi kenaikan terbatas ke skenario Bull, sementara risiko koreksi ke nilai wajar cukup terbuka. Disarankan menunggu koreksi harga.`;
+      }
+    }
+
+    function toggleMethod(id) {
+      activeMethods[id] = !activeMethods[id];
+      renderAll();
+    }
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeManualForm();
+    });
+
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest("#tickerSearch") && !e.target.closest("#autocompleteList")) {
+        document.getElementById("autocompleteList").classList.add("hidden");
+      }
+    });
+
+    // Harga di tombol Pilihan Cepat diambil dari data BEI terbaru, bukan angka tetap
+    document.querySelectorAll('button[onclick^="selectStock("]').forEach(btn => {
+      const code = btn.getAttribute("onclick").match(/'([A-Z0-9]+)'/)[1];
+      const priceSpan = btn.querySelector(".font-mono");
+      const s = stockDatabase[code];
+      const official = window.idxOfficialStocks && window.idxOfficialStocks[code];
+      const price = (official && official.price) || (s && s.price);
+      if (priceSpan && price) priceSpan.textContent = formatRupiah(price);
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
+
