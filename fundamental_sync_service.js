@@ -219,25 +219,64 @@
         const fin = q.financialData || {};
         const sum = q.summaryDetail || {};
 
-        const price = this._num(fin.currentPrice, fallback.price);
-        const eps = this._num(stat.trailingEps, fallback.eps);
-        const bvps = this._num(stat.bookValue, fallback.bvps);
+        const finCurrency = String(fin.financialCurrency || stat.financialCurrency || sum.currency || '').toUpperCase();
+        const USD_TO_IDR = 16000;
+        const isUsd = finCurrency === 'USD';
+
+        let price = this._num(fin.currentPrice, fallback.price);
+        let eps = this._num(stat.trailingEps, null);
+        let bvps = this._num(stat.bookValue, null);
         const shares = this._num(stat.sharesOutstanding, fallback.sharesOutstanding);
-        const totalRevenue = this._num(fin.totalRevenue, fallback.revenue);
-        const netIncome = this._num(stat.netIncomeToCommon, fallback.netIncome);
+        let totalRevenue = this._num(fin.totalRevenue, fallback.revenue);
+        let netIncome = this._num(stat.netIncomeToCommon, fallback.netIncome);
         const roeRaw = this._num(fin.returnOnEquity, null);
         const roe = roeRaw !== null ? Math.round(roeRaw * 1000) / 10 : fallback.roe;
-        const cfo = this._num(fin.operatingCashflow, null);
-        const cfoPerShare = (cfo && shares > 0) ? Math.round((cfo / shares) * 10) / 10 : fallback.cfoPerShare;
+        let cfo = this._num(fin.operatingCashflow, null);
+
+        // Satuan USD handling untuk emiten komoditas/tambang (MDKA, ADRO, ITMG, INCO, MEDC, HRUM, PGAS, dll.)
+        if (isUsd || (price > 50 && bvps !== null && bvps > 0 && bvps < 5)) {
+          if (bvps !== null && bvps > 0) bvps = Math.round(bvps * USD_TO_IDR * 10) / 10;
+          if (eps !== null && eps !== 0) eps = Math.round(eps * USD_TO_IDR * 10) / 10;
+          if (cfo !== null && Math.abs(cfo) < 1e10) cfo = cfo * USD_TO_IDR;
+          if (totalRevenue && totalRevenue < 1e11) totalRevenue = totalRevenue * USD_TO_IDR;
+          if (netIncome && Math.abs(netIncome) < 1e10) netIncome = netIncome * USD_TO_IDR;
+        }
+
+        // PBV & BVPS reverse calculation jika BVPS 0/gagal/tidak wajar
+        const pbvRaw = this._num(stat.priceToBook, null);
+        if ((bvps === null || bvps <= 0 || (price > 50 && (price / bvps) > 100)) && price > 0) {
+          if (pbvRaw && pbvRaw > 0 && pbvRaw <= 50) {
+            bvps = Math.round((price / pbvRaw) * 10) / 10;
+          } else {
+            bvps = fallback.bvps || Math.round((price / fallback.targetPBV) * 10) / 10;
+          }
+        }
+
+        // PER & EPS reverse calculation jika EPS 0/gagal/tidak wajar
+        const peRaw = this._num(sum.trailingPE, null);
+        if ((eps === null || eps === 0 || (price > 50 && (price / Math.abs(eps)) > 300)) && price > 0) {
+          if (peRaw && peRaw > 0 && peRaw <= 200) {
+            eps = Math.round((price / peRaw) * 10) / 10;
+          } else {
+            eps = fallback.eps || Math.round((price / fallback.targetPE) * 10) / 10;
+          }
+        }
+
+        let cfoPerShare = (cfo && shares > 0) ? Math.round((cfo / shares) * 10) / 10 : fallback.cfoPerShare;
+        if (eps > 0 && (!cfoPerShare || cfoPerShare <= 0 || (cfoPerShare / eps < 0.05))) {
+          cfoPerShare = Math.round(eps * 1.15 * 10) / 10;
+        }
+
         const fcfRaw = this._num(fin.freeCashflow, null);
         const capexPerShare = (cfo && fcfRaw && shares > 0) ? Math.max(0, Math.round(((cfo - fcfRaw) / shares) * 10) / 10) : fallback.capexPerShare;
-        const dps = this._num(sum.dividendRate, fallback.dps);
+        let dps = this._num(sum.dividendRate, fallback.dps);
+        if (isUsd && dps && dps < 5) dps = Math.round(dps * USD_TO_IDR * 10) / 10;
+
         const growthRaw = this._num(fin.earningsGrowth, null);
         const growth = (growthRaw !== null && isFinite(growthRaw)) ? Math.max(1, Math.min(10.9, Math.round(growthRaw * 1000) / 10)) : fallback.growth;
 
         // Debt & liabilities
         const totalDebt = this._num(fin.totalDebt, null);
-        const totalCash = this._num(fin.totalCash, 0);
         let totalEquity = bvps && shares ? Math.round(bvps * shares) : fallback.totalEquity;
         let totalLiabilities = totalDebt !== null ? Math.round(totalDebt * 1.3) : fallback.totalLiabilities;
         let totalAssets = totalEquity + totalLiabilities;

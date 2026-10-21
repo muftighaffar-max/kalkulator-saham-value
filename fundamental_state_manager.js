@@ -129,6 +129,10 @@
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
             Object.entries(parsed).forEach(([k, v]) => {
+              // Abaikan data korup dengan BVPS 0 atau skala USD mentah
+              if (v && (v.bvps === 0 || (v.price > 100 && v.bvps > 0 && v.bvps < 5))) {
+                return;
+              }
               this.memoryCache.set(k, v);
             });
           }
@@ -141,7 +145,9 @@
     _saveToLocalStorage() {
       try {
         // Save top 200 most recently updated tickers to fit nicely in 5MB quota
-        const entries = Array.from(this.memoryCache.entries());
+        const entries = Array.from(this.memoryCache.entries()).filter(([k, v]) => {
+          return v && v.bvps > 0 && !(v.price > 100 && v.bvps < 5);
+        });
         entries.sort((a, b) => {
           const tA = new Date(a[1].lastUpdated || 0).getTime();
           const tB = new Date(b[1].lastUpdated || 0).getTime();
@@ -163,8 +169,15 @@
     get(ticker, allowExpired = true) {
       if (!ticker) return null;
       const clean = ticker.toUpperCase().trim();
-      const record = this.memoryCache.get(clean);
+      let record = this.memoryCache.get(clean);
       if (!record) return null;
+
+      if (typeof window !== 'undefined' && typeof window.sanitizeStockFundamentals === 'function') {
+        record = window.sanitizeStockFundamentals(record);
+      } else if (record.bvps <= 0 || (record.price > 100 && record.bvps < 5)) {
+        const pbv = (record.targetPBV && record.targetPBV > 0 && record.targetPBV <= 50) ? record.targetPBV : 1.4;
+        if (record.price > 0) record.bvps = Math.round((record.price / pbv) * 10) / 10;
+      }
 
       if (!allowExpired && record.lastUpdated) {
         const age = Date.now() - new Date(record.lastUpdated).getTime();

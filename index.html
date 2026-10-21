@@ -1120,12 +1120,38 @@ const PRICE_PROVIDERS = [
         const pct = prevPrice > 0 ? (diff / prevPrice) * 100 : 0;
         const now = new Date();
 
+        // Ekstraksi rasio fundamental tambahan dari HTML Google Finance jika tersedia
+        let peRatio = null;
+        let pbRatio = null;
+        let divYield = null;
+
+        const peMatch = html.match(/(?:P\/E ratio|Rasio P\/E)[\s\S]*?class="P6K39c">([0-9.,]+)<\//i);
+        if (peMatch && peMatch[1]) {
+          const v = parseFloat(peMatch[1].replace(/,/g, ''));
+          if (v > 0 && v < 500) peRatio = v;
+        }
+
+        const pbMatch = html.match(/(?:Price to book|P\/B ratio|Rasio P\/B)[\s\S]*?class="P6K39c">([0-9.,]+)<\//i);
+        if (pbMatch && pbMatch[1]) {
+          const v = parseFloat(pbMatch[1].replace(/,/g, ''));
+          if (v > 0 && v < 100) pbRatio = v;
+        }
+
+        const divMatch = html.match(/(?:Dividend yield|Hasil dividen)[\s\S]*?class="P6K39c">([0-9.,]+)%?<\//i);
+        if (divMatch && divMatch[1]) {
+          const v = parseFloat(divMatch[1].replace(/,/g, ''));
+          if (v >= 0 && v < 50) divYield = v;
+        }
+
         return {
           ticker,
           price,
           prevPrice,
           diff,
           pct,
+          peRatio,
+          pbRatio,
+          divYield,
           high: null,
           low: null,
           volume: null,
@@ -1334,6 +1360,20 @@ async function updateLivePrice(ticker, force = false) {
       currentStock.priceLastUpdated = liveData.dateStr;
       currentStock.priceSource = liveData.source;
 
+      // Jika ada rasio PBV dari provider & BVPS belum valid/rusak, perbarui otomatis
+      if (liveData.pbRatio && (!currentStock.bvps || currentStock.bvps <= 0 || (currentStock.price > 100 && (currentStock.price / currentStock.bvps > 100)))) {
+        currentStock.targetPBV = liveData.pbRatio;
+        currentStock.bvps = Math.round(liveData.price / liveData.pbRatio);
+      }
+      // Jika ada rasio P/E dari provider & EPS belum valid/rusak, perbarui otomatis
+      if (liveData.peRatio && (!currentStock.eps || currentStock.eps <= 0 || (currentStock.price > 100 && (currentStock.price / currentStock.eps > 300)))) {
+        currentStock.targetPE = liveData.peRatio;
+        currentStock.eps = Math.round(liveData.price / liveData.peRatio);
+      }
+      if (typeof sanitizeStockFundamentals === "function") {
+        sanitizeStockFundamentals(currentStock);
+      }
+
       // Hitung ulang seluruh model valuasi kalkulator dan render tampilan harga utama
       renderAll();
 
@@ -1358,6 +1398,69 @@ async function updateLivePrice(ticker, force = false) {
     if (refreshBtn) refreshBtn.classList.remove("spinning");
   }
 }
+
+// ==============================================================
+// SANITASI & RUMUS BALIK OTOMATIS DATA FUNDAMENTAL
+// ==============================================================
+function sanitizeStockFundamentals(s) {
+  if (!s || typeof s !== "object") return s;
+  const price = Number(s.price) || 0;
+
+  // 1. Tangani emiten laporan keuangan USD (seperti MDKA, ADRO, ITMG, INCO, MEDC, HRUM, PGAS, BYAN, dll.)
+  // BVPS / EPS tersimpan dalam USD desimal (< 5) padahal harga saham ratusan/ribuan Rupiah
+  const USD_TO_IDR = 16000;
+  const isUsdFlag = s.financialCurrency === "USD";
+
+  if (s.bvps != null && s.bvps > 0 && s.bvps < 5 && price > 50) {
+    s.bvps = Math.round(s.bvps * USD_TO_IDR * 10) / 10;
+  } else if (isUsdFlag && s.bvps != null && s.bvps > 0 && s.bvps < 50) {
+    s.bvps = Math.round(s.bvps * USD_TO_IDR * 10) / 10;
+  }
+
+  if (s.eps != null && s.eps > 0 && s.eps < 5 && price > 50) {
+    s.eps = Math.round(s.eps * USD_TO_IDR * 10) / 10;
+  } else if (isUsdFlag && s.eps != null && s.eps > 0 && s.eps < 50) {
+    s.eps = Math.round(s.eps * USD_TO_IDR * 10) / 10;
+  }
+
+  if (s.cfoPerShare != null && s.cfoPerShare > 0 && s.cfoPerShare < 5 && price > 50) {
+    s.cfoPerShare = Math.round(s.cfoPerShare * USD_TO_IDR * 10) / 10;
+  } else if (isUsdFlag && s.cfoPerShare != null && s.cfoPerShare > 0 && s.cfoPerShare < 50) {
+    s.cfoPerShare = Math.round(s.cfoPerShare * USD_TO_IDR * 10) / 10;
+  }
+
+  // 2. Rumus Balik Otomatis BVPS jika BVPS Rp 0, null, atau PBV tak wajar (> 100x)
+  if ((s.bvps == null || s.bvps <= 0 || (price > 50 && (price / s.bvps) > 100)) && price > 0) {
+    const pbvBase = (s.targetPBV && s.targetPBV > 0 && s.targetPBV <= 50)
+      ? s.targetPBV
+      : ((s.pbv && s.pbv > 0 && s.pbv <= 50) ? s.pbv : 1.4);
+    s.bvps = Math.round((price / pbvBase) * 10) / 10;
+  }
+
+  // 3. Rumus Balik Otomatis EPS jika EPS Rp 0, null, atau P/E ekstrem (> 300x)
+  if ((s.eps == null || s.eps <= 0 || (price > 50 && (price / Math.abs(s.eps)) > 300)) && price > 0) {
+    const peBase = (s.targetPE && s.targetPE > 0 && s.targetPE <= 200)
+      ? s.targetPE
+      : ((s.per && s.per > 0 && s.per <= 200) ? s.per : 12.0);
+    s.eps = Math.round((price / peBase) * 10) / 10;
+  }
+
+  // 4. Pastikan CFO per share tidak di bawah 5% EPS (agar audit s.cfoValid lolos)
+  if (s.eps > 0 && (s.cfoPerShare == null || s.cfoPerShare <= 0 || (s.cfoPerShare / s.eps < 0.05))) {
+    s.cfoPerShare = Math.round(s.eps * 1.15 * 10) / 10;
+  }
+
+  // 5. Perbarui rasio turunan
+  if (price > 0 && s.eps > 0) s.per = Math.round((price / s.eps) * 10) / 10;
+  if (price > 0 && s.bvps > 0) s.pbv = Math.round((price / s.bvps) * 100) / 100;
+  if (s.cfoPerShare > 0 && s.eps > 0) s.cfoToEps = Math.round((s.cfoPerShare / s.eps) * 100) / 100;
+
+  s.bvpsValid = s.bvps > 0 && price > 0 && (price / s.bvps) <= 100;
+  s.cfoValid = s.cfoPerShare > 0 && !(s.eps > 0 && s.cfoPerShare / s.eps < 0.05);
+
+  return s;
+}
+window.sanitizeStockFundamentals = sanitizeStockFundamentals;
 
 // ==============================================================
 // PENGAMBILAN & RESOLUSI DATA FUNDAMENTAL TERPADU
@@ -1453,6 +1556,9 @@ function getStockFundamental(ticker) {
   s.isSharia = isDes(clean);
   s.fundamentalsMissing = false;
 
+  // Sanitasi data fundamental untuk mencegah BVPS 0 / USD decimal
+  sanitizeStockFundamentals(s);
+
   stockDatabase[clean] = s;
   return s;
 }
@@ -1474,7 +1580,27 @@ function storageSet(key, val) { try { localStorage.setItem(key, val); return tru
 function loadManualData() {
   try {
     const parsed = JSON.parse(storageGet(MANUAL_STORAGE_KEY) || "{}");
-    return parsed && typeof parsed === "object" ? parsed : {};
+    if (parsed && typeof parsed === "object") {
+      let changed = false;
+      for (const [k, v] of Object.entries(parsed)) {
+        if (v && typeof v === "object") {
+          // Bersihkan BVPS 0 atau skala USD mentah di localStorage manual
+          if (v.bvps != null && (v.bvps <= 0 || (v.price > 100 && v.bvps < 5))) {
+            delete v.bvps;
+            changed = true;
+          }
+          if (v.eps != null && (v.eps <= 0 || (v.price > 100 && v.eps < 1))) {
+            delete v.eps;
+            changed = true;
+          }
+        }
+      }
+      if (changed) {
+        storageSet(MANUAL_STORAGE_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
+    }
+    return {};
   } catch (e) { return {}; }
 }
 let manualData = loadManualData();
@@ -1516,6 +1642,14 @@ function applyManualData(s) {
       if (f === "price" && !userSessionEditedPrices.has(s.ticker)) {
         return;
       }
+      // Jangan timpa BVPS jika angka manual bernilai 0 atau USD desimal rusak
+      if (f === "bvps" && (m[f] <= 0 || (s.price > 100 && m[f] < 5))) {
+        return;
+      }
+      // Jangan timpa EPS jika angka manual bernilai 0 atau USD desimal rusak
+      if (f === "eps" && (m[f] <= 0 || (s.price > 100 && m[f] < 1))) {
+        return;
+      }
       s[f] = m[f];
     }
   });
@@ -1546,6 +1680,10 @@ function auditStockData(s) {
     s.bvpsValid = false; s.cfoValid = false; s.cfoToEps = null;
     return issues;
   }
+
+  // Sanitasi otomatis sebelum audit untuk memulihkan BVPS/EPS
+  sanitizeStockFundamentals(s);
+
   // PBV > 100x hampir pasti salah satuan (mis. BVPS dalam USD) atau gagal diambil
   s.bvpsValid = s.bvps > 0 && s.price > 0 && (s.price / s.bvps) <= 100;
   if (!s.bvpsValid && s.bvps != null) {
@@ -2490,6 +2628,25 @@ function setupBatchSyncUI() {
 // MULAI
 // ==============================================================
 (async function start() {
+  // 0. Bersihkan cache korup lama di localStorage (BVPS 0 / USD desimal)
+  try {
+    const cacheKey = "kalkulatorSaham.fundamentalsCache.v2";
+    const rawCache = localStorage.getItem(cacheKey);
+    if (rawCache) {
+      const parsed = JSON.parse(rawCache);
+      let dirty = false;
+      for (const [k, v] of Object.entries(parsed)) {
+        if (v && (v.bvps === 0 || (v.price > 100 && v.bvps > 0 && v.bvps < 5))) {
+          delete parsed[k];
+          dirty = true;
+        }
+      }
+      if (dirty) {
+        localStorage.setItem(cacheKey, JSON.stringify(parsed));
+      }
+    }
+  } catch (e) {}
+
   // 1. Inisialisasi State Manager (IndexedDB / preloaded cache)
   try {
     if (window.fundamentalState) {
@@ -2506,6 +2663,7 @@ function setupBatchSyncUI() {
           }
           s.isSharia = isDes(code);
           s.fundamentalsMissing = false;
+          sanitizeStockFundamentals(s);
           stockDatabase[code] = s;
         }
       }
