@@ -1270,6 +1270,14 @@ async function updateLivePrice(ticker, force = false) {
   const clean = String(ticker || "").trim().toUpperCase();
   if (!clean) return;
 
+  if (force) {
+    userSessionEditedPrices.delete(clean);
+    if (manualData[clean] && manualData[clean].price != null) {
+      delete manualData[clean].price;
+      persistManualData();
+    }
+  }
+
   const statusEl = $("priceSyncStatus");
   const refreshBtn = $("refreshPriceBtn");
 
@@ -1281,32 +1289,52 @@ async function updateLivePrice(ticker, force = false) {
   try {
     const liveData = await fetchLiveStockPrice(clean);
 
+    // Jika pengguna TIDAK sedang secara aktif mengunci harga manual pada sesi ini:
+    if (!userSessionEditedPrices.has(clean)) {
+      if (manualData[clean] && manualData[clean].price != null) {
+        delete manualData[clean].price;
+        persistManualData();
+      }
+    }
+
+    // Sinkronkan ke runtime DB & idxStocks
+    if (idxStocks[clean]) {
+      idxStocks[clean].price = liveData.price;
+      idxStocks[clean].prev = liveData.prevPrice;
+      idxStocks[clean].diff = liveData.diff;
+      if (liveData.high) idxStocks[clean].high = liveData.high;
+      if (liveData.low) idxStocks[clean].low = liveData.low;
+      if (liveData.volume) idxStocks[clean].volume = liveData.volume;
+    }
+    if (stockDatabase[clean]) {
+      stockDatabase[clean].price = liveData.price;
+      stockDatabase[clean].prevPrice = liveData.prevPrice;
+      stockDatabase[clean].diff = liveData.diff;
+      if (stockDatabase[clean]._original) {
+        stockDatabase[clean]._original.price = liveData.price;
+        stockDatabase[clean]._original.prevPrice = liveData.prevPrice;
+        stockDatabase[clean]._original.diff = liveData.diff;
+      }
+    }
+
     if (currentStock && currentStock.ticker === clean) {
-      currentStock.price = liveData.price;
-      currentStock.prevPrice = liveData.prevPrice;
-      currentStock.diff = liveData.diff;
+      if (!userSessionEditedPrices.has(clean)) {
+        currentStock.price = liveData.price;
+        currentStock.prevPrice = liveData.prevPrice;
+        currentStock.diff = liveData.diff;
+        if (currentStock._original) {
+          currentStock._original.price = liveData.price;
+          currentStock._original.prevPrice = liveData.prevPrice;
+          currentStock._original.diff = liveData.diff;
+        }
+      }
       if (liveData.high) currentStock.high = liveData.high;
       if (liveData.low) currentStock.low = liveData.low;
       if (liveData.volume) currentStock.volume = liveData.volume;
       currentStock.priceLastUpdated = liveData.dateStr;
       currentStock.priceSource = liveData.source;
 
-      // Sinkronkan ke runtime DB & idxStocks
-      if (idxStocks[clean]) {
-        idxStocks[clean].price = liveData.price;
-        idxStocks[clean].prev = liveData.prevPrice;
-        idxStocks[clean].diff = liveData.diff;
-        if (liveData.high) idxStocks[clean].high = liveData.high;
-        if (liveData.low) idxStocks[clean].low = liveData.low;
-        if (liveData.volume) idxStocks[clean].volume = liveData.volume;
-      }
-      if (stockDatabase[clean]) {
-        stockDatabase[clean].price = liveData.price;
-        stockDatabase[clean].prevPrice = liveData.prevPrice;
-        stockDatabase[clean].diff = liveData.diff;
-      }
-
-      // Hitung ulang seluruh model valuasi kalkulator
+      // Hitung ulang seluruh model valuasi kalkulator dan render tampilan harga utama
       renderAll();
 
       if (statusEl) {
@@ -1451,20 +1479,46 @@ function loadManualData() {
 }
 let manualData = loadManualData();
 const persistManualData = () => storageSet(MANUAL_STORAGE_KEY, JSON.stringify(manualData));
+const userSessionEditedPrices = new Set();
 
 // Menimpa data bawaan dengan data manual; data bawaan disimpan sekali agar bisa dikembalikan
 function applyManualData(s) {
+  // Simpan harga saat ini sebelum snapshot fields di-reset
+  const currentPrice = s.price;
+  const currentDiff = s.diff;
+  const currentPrevPrice = s.prevPrice;
+
   if (!s._original) {
     s._original = {};
     SNAPSHOT_FIELDS.forEach(f => { s._original[f] = s[f]; });
   }
   SNAPSHOT_FIELDS.forEach(f => { s[f] = s._original[f]; });
 
+  // Pertahankan harga live terkini bila tidak ada override manual aktif pada sesi ini
+  if (!userSessionEditedPrices.has(s.ticker)) {
+    if (currentPrice > 0) {
+      s.price = currentPrice;
+      if (currentDiff != null) s.diff = currentDiff;
+      if (currentPrevPrice != null) s.prevPrice = currentPrevPrice;
+      s._original.price = currentPrice;
+      if (currentDiff != null) s._original.diff = currentDiff;
+      if (currentPrevPrice != null) s._original.prevPrice = currentPrevPrice;
+    }
+  }
+
   const m = manualData[s.ticker];
   s.manual = m || null;
   if (!m) return;
 
-  MANUAL_FIELDS.forEach(f => { if (m[f] != null) s[f] = m[f]; });
+  MANUAL_FIELDS.forEach(f => {
+    if (m[f] != null) {
+      // Jangan timpa harga jika pengguna tidak sedang secara aktif mengedit harga di sesi ini
+      if (f === "price" && !userSessionEditedPrices.has(s.ticker)) {
+        return;
+      }
+      s[f] = m[f];
+    }
+  });
   s.fundamentalsMissing = false;
 
   if (m.cyclicalityScore != null) {
@@ -2126,6 +2180,9 @@ function saveManualForm(e) {
 
   entry.source = $("mf_source").value.trim().slice(0, 120);
   entry.updatedAt = new Date().toISOString();
+  if (entry.price != null && entry.price > 0) {
+    userSessionEditedPrices.add(currentStock.ticker);
+  }
   manualData[currentStock.ticker] = entry;
   if (!persistManualData()) return formError("Gagal menyimpan karena penyimpanan browser tidak tersedia (mode privat?).");
   closeManualForm();
@@ -2133,10 +2190,12 @@ function saveManualForm(e) {
 }
 
 function resetManualData() {
+  userSessionEditedPrices.delete(currentStock.ticker);
   delete manualData[currentStock.ticker];
   persistManualData();
   closeManualForm();
   renderAll();
+  updateLivePrice(currentStock.ticker, true);
 }
 
 function renderBackup() {
@@ -2252,6 +2311,11 @@ window.addEventListener("hashchange", () => {
 // Tombol refresh harga live pasar di masthead
 $("refreshPriceBtn").addEventListener("click", () => {
   if (currentStock && currentStock.ticker) {
+    userSessionEditedPrices.delete(currentStock.ticker);
+    if (manualData[currentStock.ticker] && manualData[currentStock.ticker].price != null) {
+      delete manualData[currentStock.ticker].price;
+      persistManualData();
+    }
     updateLivePrice(currentStock.ticker, true);
   }
 });
@@ -2284,10 +2348,16 @@ $("saveManualPriceBtn").addEventListener("click", () => {
   }
 
   if (currentStock) {
+    userSessionEditedPrices.add(currentStock.ticker);
     const prev = currentStock.prevPrice || currentStock.price || newPrice;
     currentStock.price = newPrice;
     currentStock.diff = newPrice - prev;
     currentStock.manualPrice = newPrice;
+    if (currentStock._original) {
+      currentStock._original.price = newPrice;
+      currentStock._original.prevPrice = prev;
+      currentStock._original.diff = newPrice - prev;
+    }
 
     if (!manualData[currentStock.ticker]) manualData[currentStock.ticker] = {};
     manualData[currentStock.ticker].price = newPrice;
@@ -2327,6 +2397,7 @@ function setupBatchSyncUI() {
 
   if (syncAllBtn) {
     syncAllBtn.addEventListener("click", () => {
+      userSessionEditedPrices.clear();
       if (window.batchSyncController.isRunning) {
         batchCard.hidden = false;
         if (window.batchSyncController.isPaused) {
