@@ -995,6 +995,41 @@ const isDes = code => (window.isOjkSharia ? window.isOjkSharia(code) : false);
 
 // In-memory runtime stock database & sync trackers
 const stockDatabase = {};
+
+// Sinkronisasi awal data kurasi & cache agar langsung tersedia secara instan tanpa delay
+if (window.curatedFundamentals && typeof window.curatedFundamentals === "object") {
+  for (const [code, item] of Object.entries(window.curatedFundamentals)) {
+    const s = Object.assign({}, item);
+    const official = idxStocks[code];
+    if (official) {
+      if (official.price > 0 && !s.price) s.price = official.price;
+      if (s.prevPrice == null) s.prevPrice = official.prev;
+      if (s.diff == null) s.diff = official.diff;
+      if (official.shares && !s.sharesOutstanding) s.sharesOutstanding = official.shares;
+    }
+    s.isSharia = isDes(code);
+    s.fundamentalsMissing = false;
+    stockDatabase[code] = s;
+  }
+}
+if (window.cachedFundamentals && typeof window.cachedFundamentals === "object") {
+  for (const [code, item] of Object.entries(window.cachedFundamentals)) {
+    if (!stockDatabase[code]) {
+      const s = Object.assign({}, item);
+      const official = idxStocks[code];
+      if (official) {
+        if (official.price > 0 && !s.price) s.price = official.price;
+        if (s.prevPrice == null) s.prevPrice = official.prev;
+        if (s.diff == null) s.diff = official.diff;
+        if (official.shares && !s.sharesOutstanding) s.sharesOutstanding = official.shares;
+      }
+      s.isSharia = isDes(code);
+      s.fundamentalsMissing = false;
+      stockDatabase[code] = s;
+    }
+  }
+}
+
 const isSyncingTicker = new Set();
 const CURATED_COUNT = Object.keys(window.curatedFundamentals || {}).length;
 
@@ -1231,9 +1266,6 @@ async function fetchLiveStockPrice(ticker) {
   throw lastError || new Error(`Gagal mengambil harga live ${clean}`);
 }
 
-  throw lastError || new Error(`Gagal mengambil harga live ${clean}.JK`);
-}
-
 async function updateLivePrice(ticker, force = false) {
   const clean = String(ticker || "").trim().toUpperCase();
   if (!clean) return;
@@ -1308,6 +1340,16 @@ function getStockFundamental(ticker) {
 
   // 1. Ambil dari memory cache jika ada
   let s = stockDatabase[clean];
+
+  // 1b. Ambil dari window.curatedFundamentals jika belum ada
+  if (!s && window.curatedFundamentals && window.curatedFundamentals[clean]) {
+    s = Object.assign({}, window.curatedFundamentals[clean]);
+  }
+
+  // 1c. Ambil dari window.cachedFundamentals jika belum ada
+  if (!s && window.cachedFundamentals && window.cachedFundamentals[clean]) {
+    s = Object.assign({}, window.cachedFundamentals[clean]);
+  }
 
   // 2. Jika belum di memory, ambil dari fundamentalState
   if (!s && window.fundamentalState) {
@@ -1900,7 +1942,7 @@ function renderSharia(s) {
   }
 }
 
-const QUICK_CODES = ["BRIS", "ICBP", "SIDO", "TLKM", "ANTM", "PTBA", "SMRA", "BBCA"];
+let QUICK_CODES = ["HRTA", "BRIS", "ICBP", "SIDO", "TLKM", "ANTM", "PTBA", "SMRA", "BBCA"];
 function renderQuickPicks() {
   $("quickPicks").innerHTML = QUICK_CODES.map(c => {
     const s = getStockFundamental(c);
@@ -1919,6 +1961,13 @@ function renderQuickPicks() {
 function selectStock(ticker) {
   ticker = String(ticker || "").trim().toUpperCase();
   if (!/^[A-Z0-9]{2,6}$/.test(ticker)) return;
+
+  // Pastikan emiten yang dipilih/dicari masuk ke deretan Emiten Kurasi di atas
+  if (!QUICK_CODES.includes(ticker)) {
+    QUICK_CODES.unshift(ticker);
+    if (QUICK_CODES.length > 12) QUICK_CODES.pop();
+  }
+
   currentStock = getStockFundamental(ticker);
   $("tickerSearch").value = "";
   closeSuggest();
@@ -2371,33 +2420,41 @@ function setupBatchSyncUI() {
 // ==============================================================
 (async function start() {
   // 1. Inisialisasi State Manager (IndexedDB / preloaded cache)
-  if (window.fundamentalState) {
-    await window.fundamentalState.init();
-    if (window.fundamentalState.memoryCache) {
-      for (const [code, item] of window.fundamentalState.memoryCache.entries()) {
-        const s = Object.assign({}, item);
-        const official = idxStocks[code];
-        if (official) {
-          if (official.price > 0 && !s.price) s.price = official.price;
-          if (s.prevPrice == null) s.prevPrice = official.prev;
-          if (s.diff == null) s.diff = official.diff;
-          if (official.shares && !s.sharesOutstanding) s.sharesOutstanding = official.shares;
+  try {
+    if (window.fundamentalState) {
+      await window.fundamentalState.init();
+      if (window.fundamentalState.memoryCache) {
+        for (const [code, item] of window.fundamentalState.memoryCache.entries()) {
+          const s = Object.assign({}, item);
+          const official = idxStocks[code];
+          if (official) {
+            if (official.price > 0 && !s.price) s.price = official.price;
+            if (s.prevPrice == null) s.prevPrice = official.prev;
+            if (s.diff == null) s.diff = official.diff;
+            if (official.shares && !s.sharesOutstanding) s.sharesOutstanding = official.shares;
+          }
+          s.isSharia = isDes(code);
+          s.fundamentalsMissing = false;
+          stockDatabase[code] = s;
         }
-        s.isSharia = isDes(code);
-        s.fundamentalsMissing = false;
-        stockDatabase[code] = s;
       }
     }
+  } catch (err) {
+    console.warn("[Init] fundamentalState init non-fatal:", err);
   }
 
   // 2. Hubungkan controller batch sync
-  setupBatchSyncUI();
+  try {
+    setupBatchSyncUI();
+  } catch (err) {
+    console.warn("[Init] setupBatchSyncUI non-fatal:", err);
+  }
 
   // 3. Tampilkan emiten awal
   const fromHash = location.hash.slice(1).toUpperCase();
   const last = storageGet("kalkulatorSaham.lastTicker");
-  const pick = [fromHash, last, "BRIS"].find(c => c && /^[A-Z0-9]{2,6}$/.test(c) && (idxStocks[c] || stockDatabase[c]));
-  selectStock(pick || Object.keys(idxStocks)[0] || "BRIS");
+  const pick = [fromHash, last, "HRTA", "BRIS"].find(c => c && /^[A-Z0-9]{2,6}$/.test(c) && (idxStocks[c] || stockDatabase[c]));
+  selectStock(pick || "HRTA");
 })();
 </script>
 </body>
