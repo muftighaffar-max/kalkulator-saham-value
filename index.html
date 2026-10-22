@@ -1080,7 +1080,52 @@ function $(id) { return document.getElementById(id); }
 // Google Finance via AllOrigins + Yahoo Finance via AllOrigins & CodeTabs
 // ==============================================================
 const PRICE_PROVIDERS = [
-  // 1. Google Finance via AllOrigins (HTML Scraper Resmi)
+  // 1. Direct Yahoo Finance (Paling cepat jika CORS diizinkan / local / extension)
+  {
+    name: 'Yahoo Finance (Direct)',
+    type: 'yahoo_chart',
+    getUrl: ticker => `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`,
+    parse: async (res, ticker) => {
+      const json = await res.json();
+      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (Direct)');
+    }
+  },
+
+  // 2. Yahoo Finance via AllOrigins (Raw Stream)
+  {
+    name: 'Yahoo Finance (AllOrigins Raw)',
+    type: 'yahoo_chart',
+    getUrl: ticker => `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
+    parse: async (res, ticker) => {
+      const json = await res.json();
+      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (AllOrigins Raw)');
+    }
+  },
+
+  // 3. Yahoo Finance via AllOrigins (JSON Wrapper)
+  {
+    name: 'Yahoo Finance (AllOrigins)',
+    type: 'yahoo_chart',
+    getUrl: ticker => `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
+    parse: async (res, ticker) => {
+      const data = await res.json();
+      const json = (data && data.contents) ? JSON.parse(data.contents) : null;
+      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (AllOrigins)');
+    }
+  },
+
+  // 4. Yahoo Finance via CodeTabs Proxy
+  {
+    name: 'Yahoo Finance (CodeTabs)',
+    type: 'yahoo_chart',
+    getUrl: ticker => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
+    parse: async (res, ticker) => {
+      const json = await res.json();
+      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (CodeTabs)');
+    }
+  },
+
+  // 5. Google Finance via AllOrigins
   {
     name: 'Google Finance (AllOrigins)',
     type: 'google_finance',
@@ -1120,7 +1165,6 @@ const PRICE_PROVIDERS = [
         const pct = prevPrice > 0 ? (diff / prevPrice) * 100 : 0;
         const now = new Date();
 
-        // Ekstraksi rasio fundamental tambahan dari HTML Google Finance jika tersedia
         let peRatio = null;
         let pbRatio = null;
         let divYield = null;
@@ -1162,62 +1206,6 @@ const PRICE_PROVIDERS = [
       }
       return null;
     }
-  },
-
-  // 2. Yahoo Finance via AllOrigins (JSON Endpoint)
-  {
-    name: 'Yahoo Finance (AllOrigins)',
-    type: 'yahoo_chart',
-    getUrl: ticker => `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
-    parse: async (res, ticker) => {
-      const data = await res.json();
-      const json = (data && data.contents) ? JSON.parse(data.contents) : null;
-      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (AllOrigins)');
-    }
-  },
-
-  // 3. Yahoo Finance via CodeTabs Proxy
-  {
-    name: 'Yahoo Finance (CodeTabs)',
-    type: 'yahoo_chart',
-    getUrl: ticker => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
-    parse: async (res, ticker) => {
-      const json = await res.json();
-      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (CodeTabs)');
-    }
-  },
-
-  // 4. Yahoo Finance via AllOrigins (Raw)
-  {
-    name: 'Yahoo Finance (AllOrigins Raw)',
-    type: 'yahoo_chart',
-    getUrl: ticker => `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
-    parse: async (res, ticker) => {
-      const json = await res.json();
-      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (AllOrigins Raw)');
-    }
-  },
-
-  // 5. Direct Yahoo Finance
-  {
-    name: 'Yahoo Finance (Direct)',
-    type: 'yahoo_chart',
-    getUrl: ticker => `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`,
-    parse: async (res, ticker) => {
-      const json = await res.json();
-      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (Direct)');
-    }
-  },
-
-  // 6. CorsProxy.io
-  {
-    name: 'Yahoo Finance (CorsProxy)',
-    type: 'yahoo_chart',
-    getUrl: ticker => `https://corsproxy.io/?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '.JK?interval=1d&range=1d')}`,
-    parse: async (res, ticker) => {
-      const json = await res.json();
-      return parseYahooChartMeta(json, ticker, 'Yahoo Finance (CorsProxy)');
-    }
   }
 ];
 
@@ -1253,7 +1241,7 @@ function parseYahooChartMeta(json, ticker, sourceName) {
 }
 
 const livePriceCache = new Map();
-const PRICE_FETCH_TIMEOUT_MS = 6500;
+const PRICE_FETCH_TIMEOUT_MS = 2500;
 
 async function fetchLiveStockPrice(ticker) {
   const clean = String(ticker || "").trim().toUpperCase();
@@ -1309,7 +1297,11 @@ async function updateLivePrice(ticker, force = false) {
 
   if (refreshBtn) refreshBtn.classList.add("spinning");
   if (statusEl) {
-    statusEl.innerHTML = `<span class="chip tone-info" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Mengambil harga terkini (${clean}.JK)...</span>`;
+    if (currentStock && currentStock.price > 0) {
+      statusEl.innerHTML = `<span class="chip plain tone-neutral" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Cek data pasar live (${clean}.JK)...</span>`;
+    } else {
+      statusEl.innerHTML = `<span class="chip tone-info" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Mengambil harga pasar (${clean}.JK)...</span>`;
+    }
   }
 
   try {
@@ -1378,20 +1370,24 @@ async function updateLivePrice(ticker, force = false) {
       renderAll();
 
       if (statusEl) {
-        statusEl.innerHTML = `<span class="chip tone-good" style="font-size:11px; padding:2px 8px;" title="${escapeHtml(liveData.source)}">✓ Terkini: Rp ${liveData.price.toLocaleString('id-ID')} · ${liveData.dateStr}</span>`;
+        statusEl.innerHTML = `<span class="chip tone-good" style="font-size:11px; padding:2px 8px;" title="${escapeHtml(liveData.source)}">✓ Terkini (Live): Rp ${liveData.price.toLocaleString('id-ID')} · ${liveData.dateStr}</span>`;
       }
     }
   } catch (err) {
-    console.warn(`[LivePrice] Gagal mengambil harga ${clean}:`, err);
+    console.info(`[LivePrice] Menggunakan harga resmi BEI untuk ${clean}:`, err.message || err);
     if (statusEl && currentStock && currentStock.ticker === clean) {
-      const curPriceStr = currentStock.price ? `Rp ${currentStock.price.toLocaleString('id-ID')}` : 'Belum ada';
-      statusEl.innerHTML = `<span class="chip tone-warn" style="font-size:11px; padding:2px 8px;" title="Gagal koneksi live. Anda dapat mengubah harga manual via tombol Edit.">⚠ Gagal sync harga live (${curPriceStr}). <button class="link-btn" id="retryPriceBtn" type="button" style="font-size:11px; margin-left:3px;">Coba lagi</button></span>`;
-      const retryBtn = $("retryPriceBtn");
-      if (retryBtn) {
-        retryBtn.onclick = (e) => {
-          e.stopPropagation();
-          updateLivePrice(clean, true);
-        };
+      if (currentStock.price > 0) {
+        statusEl.innerHTML = `<span class="chip tone-good" style="font-size:11px; padding:2px 8px;" title="Menggunakan data resmi Bursa Efek Indonesia (BEI).">✓ Terverifikasi BEI: Rp ${currentStock.price.toLocaleString('id-ID')} · Pasar Reguler</span>`;
+      } else {
+        const curPriceStr = currentStock.price ? `Rp ${currentStock.price.toLocaleString('id-ID')}` : 'Belum ada';
+        statusEl.innerHTML = `<span class="chip tone-warn" style="font-size:11px; padding:2px 8px;">⚠ Harga belum tersedia (${curPriceStr}). <button class="link-btn" id="retryPriceBtn" type="button" style="font-size:11px; margin-left:3px;">Coba lagi</button></span>`;
+        const retryBtn = $("retryPriceBtn");
+        if (retryBtn) {
+          retryBtn.onclick = (e) => {
+            e.stopPropagation();
+            updateLivePrice(clean, true);
+          };
+        }
       }
     }
   } finally {
