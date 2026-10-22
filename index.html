@@ -1296,12 +1296,8 @@ async function updateLivePrice(ticker, force = false) {
   const refreshBtn = $("refreshPriceBtn");
 
   if (refreshBtn) refreshBtn.classList.add("spinning");
-  if (statusEl) {
-    if (currentStock && currentStock.price > 0) {
-      statusEl.innerHTML = `<span class="chip plain tone-neutral" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Cek data pasar live (${clean}.JK)...</span>`;
-    } else {
-      statusEl.innerHTML = `<span class="chip tone-info" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Mengambil harga pasar (${clean}.JK)...</span>`;
-    }
+  if (statusEl && !(currentStock && currentStock.price > 0)) {
+    statusEl.innerHTML = `<span class="chip tone-info" style="font-size:11px; padding:2px 8px;"><span class="sync-spinner-mini"></span>Mengambil data pasar (${clean}.JK)...</span>`;
   }
 
   try {
@@ -1783,6 +1779,13 @@ function renderMasthead(s) {
   if (official && official.low && official.high) meta.push(`Rentang harian ${official.low.toLocaleString("id-ID")}–${official.high.toLocaleString("id-ID")}`);
   $("mastMeta").textContent = meta.join(" · ");
 
+  const statusEl = $("priceSyncStatus");
+  if (statusEl) {
+    if (s.price > 0 && !statusEl.innerHTML.includes("Terkini (Live)")) {
+      statusEl.innerHTML = `<span class="chip tone-good" style="font-size:11px; padding:2px 8px;" title="Menggunakan data resmi Bursa Efek Indonesia (BEI).">✓ Terverifikasi BEI: Rp ${s.price.toLocaleString('id-ID')} · Pasar Reguler</span>`;
+    }
+  }
+
   renderMastheadChips(s);
 }
 
@@ -2157,6 +2160,8 @@ function selectStock(ticker) {
   }
 
   currentStock = getStockFundamental(ticker);
+  const statusEl = $("priceSyncStatus");
+  if (statusEl) statusEl.innerHTML = "";
   $("tickerSearch").value = "";
   closeSuggest();
   storageSet("kalkulatorSaham.lastTicker", ticker);
